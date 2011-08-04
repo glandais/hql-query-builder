@@ -1,9 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
 
 	<parent>
-	<groupId>net.ihe.gazelle.datable</groupId>
-	<artifactId>gazelle-datatable</artifactId>
+		<groupId>net.ihe.gazelle.datable</groupId>
+		<artifactId>gazelle-datatable</artifactId>
 		<version>1.0-SNAPSHOT</version>
 		<relativePath>../pom.xml</relativePath>
 	</parent>
@@ -11,7 +12,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<artifactId>gazelle-datatable-jar</artifactId>
 	<version>1.0-SNAPSHOT</version>
-	<packaging>jar</packaging>
+	<packaging>ejb</packaging>
 
 	<name>gazelle-datatable-jar</name>
 
@@ -34,6 +35,19 @@
 	</build>
 
 	<dependencies>
+
+		<dependency>
+			<groupId>javassist</groupId>
+			<artifactId>javassist</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>commons-lang</groupId>
+			<artifactId>commons-lang</artifactId>
+			<version>2.5</version>
+			<type>jar</type>
+			<scope>compile</scope>
+		</dependency>
+
 		<dependency>
 			<groupId>org.jboss.seam</groupId>
 			<artifactId>jboss-seam</artifactId>
@@ -44,6 +58,7 @@
 			<groupId>org.richfaces.framework</groupId>
 			<artifactId>richfaces-impl</artifactId>
 			<version>3.3.1.GA</version>
+			<scope>provided</scope>
 		</dependency>
 		<dependency>
 			<groupId>org.richfaces.framework</groupId>
@@ -88,13 +103,6 @@
 			<scope>provided</scope>
 		</dependency>
 		<dependency>
-			<groupId>commons-lang</groupId>
-			<artifactId>commons-lang</artifactId>
-			<version>2.5</version>
-			<type>jar</type>
-			<scope>compile</scope>
-		</dependency>
-		<dependency>
 			<groupId>com.sun.facelets</groupId>
 			<artifactId>jsf-facelets</artifactId>
 			<version>1.1.15.B1</version>
@@ -114,10 +122,6 @@
 			<version>2.1</version>
 			<type>jar</type>
 			<scope>provided</scope>
-		</dependency>
-		<dependency>
-			<groupId>javassist</groupId>
-			<artifactId>javassist</artifactId>
 		</dependency>
 	</dependencies>
 </project>
