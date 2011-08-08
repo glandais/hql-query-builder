@@ -25,14 +25,14 @@
 		<name>INRIA (Rennes, France)</name>
 	</organization>
 
-	<build>
-		<plugins>
-			<plugin>
-				<groupId>org.codehaus.mojo</groupId>
-				<artifactId>gazelle-plugins</artifactId>
-			</plugin>
-		</plugins>
-	</build>
+<!-- 	<build> -->
+<!-- 		<plugins> -->
+<!-- 			<plugin> -->
+<!-- 				<groupId>org.codehaus.mojo</groupId> -->
+<!-- 				<artifactId>gazelle-plugins</artifactId> -->
+<!-- 			</plugin> -->
+<!-- 		</plugins> -->
+<!-- 	</build> -->
 
 	<dependencies>
 
