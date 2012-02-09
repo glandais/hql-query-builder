@@ -19,8 +19,22 @@ public class GenericConverter implements Converter {
 
 	private Class<?> selectableClass;
 
+	public GenericConverter() {
+		super();
+		org.jboss.seam.annotations.faces.Converter annotation = this.getClass().getAnnotation(
+				org.jboss.seam.annotations.faces.Converter.class);
+		if (annotation != null) {
+			Class<?> converterForClass = annotation.forClass();
+			setSelectableClass(converterForClass);
+		}
+	}
+
 	public GenericConverter(Class<?> selectableClass) {
 		super();
+		setSelectableClass(selectableClass);
+	}
+
+	private void setSelectableClass(Class<?> selectableClass) {
 		this.selectableClass = selectableClass;
 		PropertyDescriptor[] propertyDescriptors = PropertyUtils.getPropertyDescriptors(selectableClass);
 		Class<?> idType = null;
