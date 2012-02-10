@@ -14,19 +14,19 @@ public class ConverterDelegator implements Converter {
 	}
 
 	@Override
-	public Object getAsObject(FacesContext arg0, UIComponent arg1, String arg2) {
-		if (NullValue.NULL_VALUE_STRING.equals(arg2)) {
+	public Object getAsObject(FacesContext context, UIComponent component, String value) {
+		if (NullValue.NULL_VALUE_STRING.equals(value)) {
 			return NullValue.NULL_VALUE;
 		}
-		return converter.getAsObject(arg0, arg1, arg2);
+		return converter.getAsObject(context, component, value);
 	}
 
 	@Override
-	public String getAsString(FacesContext arg0, UIComponent arg1, Object arg2) {
-		if (NullValue.NULL_VALUE.equals(arg2)) {
+	public String getAsString(FacesContext context, UIComponent component, Object value) {
+		if (NullValue.NULL_VALUE.equals(value)) {
 			return NullValue.NULL_VALUE_STRING;
 		}
-		return converter.getAsString(arg0, arg1, arg2);
+		return converter.getAsString(context, component, value);
 	}
 
 }

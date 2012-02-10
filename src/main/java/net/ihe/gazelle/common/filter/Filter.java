@@ -150,6 +150,7 @@ public class Filter<E> implements MapNotifierListener {
 
 			Class<?> selectableClass = criterion.getSelectableClass();
 			Converter converter = null;
+
 			if (selectableClass.equals(String.class)) {
 				converter = new StringConverter();
 			} else {
@@ -159,9 +160,6 @@ public class Filter<E> implements MapNotifierListener {
 					converter = null;
 					log.error("Failed to load converter for " + selectableClass, e);
 				}
-			}
-			if (converter == null) {
-				converter = new GenericConverter(criterion.getSelectableClass());
 			}
 			// Here we delegate the converter as we want to manage null as value
 			// and null as none selected
