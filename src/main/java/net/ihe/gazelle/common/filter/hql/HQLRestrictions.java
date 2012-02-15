@@ -19,6 +19,10 @@ public class HQLRestrictions {
 	public static HQLRestriction in(String propertyName, Collection<?> elements) {
 		return new HQLRestrictionIn(propertyName, elements);
 	}
+	
+	public static HQLRestriction nin(String propertyName, Collection<?> elements) {
+		return new HQLRestrictionNotIn(propertyName, elements);
+	}
 
 	public static HQLRestriction like(String propertyName, String value, HQLRestrictionLikeMatchMode matchMode) {
 		return new HQLRestrictionLike(propertyName, value, matchMode);
