@@ -15,6 +15,7 @@
  *******************************************************************************/
 package net.ihe.gazelle.common.filter;
 
+import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -36,6 +37,7 @@ import net.ihe.gazelle.common.filter.hql.HQLStatisticItem;
 import net.ihe.gazelle.common.filter.util.MapNotifier;
 import net.ihe.gazelle.common.filter.util.MapNotifierListener;
 
+import org.apache.commons.beanutils.PropertyUtils;
 import org.apache.commons.lang.StringUtils;
 import org.hibernate.Session;
 import org.jboss.seam.Component;
@@ -120,6 +122,12 @@ public class Filter<E> implements MapNotifierListener {
 	private Map<String, ValueFormatter> formatters;
 
 	private Map<String, Suggester<E, Object>> suggesters;
+
+	public Filter(AbstractEntity<E> entity, List<AbstractCriterion<E, ?>> criterionsList,
+			Map<String, String> requestParameterMap) {
+		this(entity, criterionsList);
+		initFromUrl(requestParameterMap);
+	}
 
 	@SuppressWarnings({ "rawtypes", "unchecked" })
 	public Filter(AbstractEntity<E> entity, List<AbstractCriterion<E, ?>> criterionsList) {
@@ -435,15 +443,7 @@ public class Filter<E> implements MapNotifierListener {
 		this.countEnabled = countEnabled;
 	}
 
-	public void setHashCode(String hashCode) {
-		String value = hashCode;
-		if (hashCode.startsWith("#")) {
-			value = hashCode.substring(1);
-		}
-		if (getHashCode().equals(value)) {
-			return;
-		}
-
+	private void initFromUrl(Map<String, String> requestParameterMap) {
 		DatatableStateHolderBean dataTableState = null;
 
 		Object dataTableStateObject = Component.getInstance("dataTableStateHolder");
@@ -451,43 +451,57 @@ public class Filter<E> implements MapNotifierListener {
 			dataTableState = (DatatableStateHolderBean) dataTableStateObject;
 		}
 
-		String[] split = StringUtils.split(value, "&");
-		for (String string : split) {
-
-			String[] split2 = StringUtils.split(string, "=");
-			String stringKey = split2[0];
-			String stringValue = split2[1];
-
-			if (string.startsWith("filter.") && dataTableState != null) {
+		Set<Entry<String, String>> entrySet = requestParameterMap.entrySet();
+		for (Entry<String, String> entry : entrySet) {
+			String stringKey = entry.getKey();
+			String stringValue = entry.getValue();
+			if (stringKey.startsWith("filter.") && dataTableState != null) {
 				stringKey = StringUtils.replaceOnce(stringKey, "filter.", "");
 				dataTableState.getColumnFilterValues().put(stringKey, stringValue);
-			} else if (string.startsWith("sort.") && dataTableState != null) {
+			} else if (stringKey.startsWith("sort.") && dataTableState != null) {
 				stringKey = StringUtils.replaceOnce(stringKey, "sort.", "");
 				Ordering orderingValue = Ordering.valueOf(stringValue);
 				dataTableState.getSortOrders().put(stringKey, orderingValue);
 			} else {
-				Object realValue = converters.get(stringKey).getAsObject(FacesContext.getCurrentInstance(), null,
-						stringValue);
-				filterValues.put(stringKey, realValue);
+				Converter converter = converters.get(stringKey);
+				if (converter != null) {
+					Object realValue = converter.getAsObject(FacesContext.getCurrentInstance(), null, stringValue);
+					if (realValue == null) {
+						try {
+							Integer id = Integer.parseInt(stringValue);
+							AbstractCriterion<E, ?> abstractCriterion = criterions.get(stringKey);
+							Class<?> selectableClass = abstractCriterion.getSelectableClass();
+							realValue = provideEntityManage().find(selectableClass, id);
+						} catch (NumberFormatException e) {
+							realValue = null;
+						}
+					}
+					filterValues.put(stringKey, realValue);
+				}
 			}
 		}
 
 		modified();
 	}
 
-	public String getHashCode() {
+	public String getUrlParameters() {
 		StringBuilder sb = new StringBuilder();
 
 		for (AbstractCriterion<E, ?> effectiveFilter : criterions.values()) {
 			String keyword = effectiveFilter.getKeyword();
 			Object value = filterValues.get(keyword);
 			if (value != null) {
-				String stringValue = converters.get(keyword)
-						.getAsString(FacesContext.getCurrentInstance(), null, value);
+				String id = value.toString();
+				try {
+					id = PropertyUtils.getProperty(value, "id").toString();
+				} catch (Throwable e) {
+					id = value.toString();
+				}
+				
 				if (sb.length() != 0) {
 					sb.append("&");
 				}
-				sb.append(keyword).append("=").append(stringValue);
+				sb.append(keyword).append("=").append(id);
 			}
 		}
 
@@ -519,7 +533,6 @@ public class Filter<E> implements MapNotifierListener {
 
 		}
 
-		return "#" + sb.toString();
+		return sb.toString();
 	}
-
 }
