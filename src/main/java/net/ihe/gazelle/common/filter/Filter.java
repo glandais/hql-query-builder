@@ -15,7 +15,6 @@
  *******************************************************************************/
 package net.ihe.gazelle.common.filter;
 
-import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -108,8 +107,6 @@ public class Filter<E> implements MapNotifierListener {
 	// Used to back call the data model on getting possible values)
 	private FilterDataModel<E> filterDataModel = null;
 
-	private boolean countEnabled = true;
-
 	// cache
 	private boolean refreshPossibleValues;
 	private boolean refreshStringValues;
@@ -126,7 +123,9 @@ public class Filter<E> implements MapNotifierListener {
 	public Filter(AbstractEntity<E> entity, List<AbstractCriterion<E, ?>> criterionsList,
 			Map<String, String> requestParameterMap) {
 		this(entity, criterionsList);
-		initFromUrl(requestParameterMap);
+		if (requestParameterMap != null) {
+			initFromUrl(requestParameterMap);
+		}
 	}
 
 	@SuppressWarnings({ "rawtypes", "unchecked" })
@@ -282,7 +281,7 @@ public class Filter<E> implements MapNotifierListener {
 	}
 
 	public HashMap<String, List<Integer>> getPossibleValuesCount() {
-		if (!countEnabled) {
+		if (!isCountEnabled()) {
 			return null;
 		}
 		refreshPossibleValues();
@@ -338,57 +337,100 @@ public class Filter<E> implements MapNotifierListener {
 			EntityManager em = provideEntityManage();
 
 			possibleValues = new HashMap<String, List<Object>>();
-			possibleValuesCount = new HashMap<String, List<Integer>>();
 
-			for (AbstractCriterion<E, ?> effectiveFilter : criterions.values()) {
-				String keyword = effectiveFilter.getKeyword();
+			if (!isPossibleFiltered()) {
+				for (AbstractCriterion<E, ?> effectiveFilter : criterions.values()) {
+					List<Object> listValues = new ArrayList<Object>();
 
-				log.debug("refreshing filter possible values for " + keyword);
+					String keyword = effectiveFilter.getKeyword();
+					AbstractCriterion<E, Object> effectiveFilterObject = (AbstractCriterion<E, Object>) effectiveFilter;
 
-				HQLQueryBuilder<E> queryBuilder = new HQLQueryBuilder<E>(em, entity.getEntityClass());
+					log.debug("refreshing filter possible values for " + keyword);
 
-				effectiveFilter.appendDefaultFilter(queryBuilder);
+					HQLQueryBuilder<?> queryBuilder = new HQLQueryBuilder(em, effectiveFilter.getSelectableClass());
+					List<?> distincts = queryBuilder.getList();
 
-				if (filterDataModel != null) {
-					log.debug("back calling data model filter");
-					filterDataModel.appendFiltersFields(queryBuilder);
-				}
-				if (filterValues.get(keyword) == null) {
-					appendHibernateFilters(queryBuilder);
-				} else {
-					appendHibernateFilters(queryBuilder, keyword);
-				}
-
-				String path = effectiveFilter.getPath();
-
-				log.debug("require counting each item");
-
-				List<Object[]> statistics = queryBuilder.getStatistics(path);
-
-				log.debug("fund " + statistics.size() + " items");
-
-				List<ValueCount> values = new ArrayList<ValueCount>();
-				AbstractCriterion<E, Object> effectiveFilterObject = (AbstractCriterion<E, Object>) effectiveFilter;
-
-				for (Object[] result : statistics) {
-					Object value = result[0];
-					if (value == null) {
-						value = NullValue.NULL_VALUE;
+					List<ValueCount> values = new ArrayList<ValueCount>(distincts.size() + 1);
+					values.add(new ValueCount(NullValue.NULL_VALUE, 0, effectiveFilterObject));
+					for (Object value : distincts) {
+						values.add(new ValueCount(value, 0, effectiveFilterObject));
 					}
-					Number count = (Number) result[1];
-					values.add(new ValueCount(value, count.intValue(), effectiveFilterObject));
+					Collections.sort(values);
+					for (ValueCount valueCount : values) {
+						listValues.add(valueCount.value);
+					}
+					possibleValues.put(keyword, listValues);
+				}
+			} else {
+				if (isCountEnabled()) {
+					possibleValuesCount = new HashMap<String, List<Integer>>();
 				}
 
-				Collections.sort(values);
-				List<Object> listValues = new ArrayList<Object>(values.size());
-				List<Integer> listCount = new ArrayList<Integer>(values.size());
-				for (ValueCount valueCount : values) {
-					listValues.add(valueCount.value);
-					listCount.add(valueCount.count);
-				}
+				for (AbstractCriterion<E, ?> effectiveFilter : criterions.values()) {
+					String keyword = effectiveFilter.getKeyword();
 
-				possibleValues.put(keyword, listValues);
-				possibleValuesCount.put(keyword, listCount);
+					log.debug("refreshing filter possible values for " + keyword);
+
+					HQLQueryBuilder<E> queryBuilder = new HQLQueryBuilder<E>(em, entity.getEntityClass());
+
+					effectiveFilter.appendDefaultFilter(queryBuilder);
+
+					if (filterDataModel != null) {
+						log.debug("back calling data model filter");
+						filterDataModel.appendFiltersFields(queryBuilder);
+					}
+					if (filterValues.get(keyword) == null) {
+						appendHibernateFilters(queryBuilder);
+					} else {
+						appendHibernateFilters(queryBuilder, keyword);
+					}
+
+					String path = effectiveFilter.getPath();
+					AbstractCriterion<E, Object> effectiveFilterObject = (AbstractCriterion<E, Object>) effectiveFilter;
+
+					List<Object> listValues = new ArrayList<Object>();
+
+					if (isCountEnabled()) {
+						log.debug("require counting each item");
+						List<Object[]> statistics = queryBuilder.getStatistics(path);
+						log.debug("fund " + statistics.size() + " items");
+
+						List<ValueCount> values = new ArrayList<ValueCount>(statistics.size());
+
+						for (Object[] result : statistics) {
+							Object value = result[0];
+							if (value == null) {
+								value = NullValue.NULL_VALUE;
+							}
+							Number count = (Number) result[1];
+							values.add(new ValueCount(value, count.intValue(), effectiveFilterObject));
+						}
+
+						Collections.sort(values);
+						List<Integer> listCount = new ArrayList<Integer>(values.size());
+						for (ValueCount valueCount : values) {
+							listValues.add(valueCount.value);
+							listCount.add(valueCount.count);
+						}
+
+						possibleValuesCount.put(keyword, listCount);
+					} else {
+						List<?> distincts = queryBuilder.getListDistinct(path);
+						List<ValueCount> values = new ArrayList<ValueCount>(distincts.size());
+						for (Object value : distincts) {
+							if (value == null) {
+								value = NullValue.NULL_VALUE;
+							}
+							values.add(new ValueCount(value, 0, effectiveFilterObject));
+						}
+						Collections.sort(values);
+						for (ValueCount valueCount : values) {
+							listValues.add(valueCount.value);
+						}
+					}
+
+					possibleValues.put(keyword, listValues);
+				}
 			}
 
 			refreshPossibleValues = false;
@@ -436,11 +478,11 @@ public class Filter<E> implements MapNotifierListener {
 	}
 
 	public boolean isCountEnabled() {
-		return countEnabled;
+		return true && isPossibleFiltered();
 	}
 
-	public void setCountEnabled(boolean countEnabled) {
-		this.countEnabled = countEnabled;
+	public boolean isPossibleFiltered() {
+		return true;
 	}
 
 	private void initFromUrl(Map<String, String> requestParameterMap) {
@@ -465,18 +507,22 @@ public class Filter<E> implements MapNotifierListener {
 			} else {
 				Converter converter = converters.get(stringKey);
 				if (converter != null) {
-					Object realValue = converter.getAsObject(FacesContext.getCurrentInstance(), null, stringValue);
-					if (realValue == null) {
-						try {
-							Integer id = Integer.parseInt(stringValue);
-							AbstractCriterion<E, ?> abstractCriterion = criterions.get(stringKey);
-							Class<?> selectableClass = abstractCriterion.getSelectableClass();
-							realValue = provideEntityManage().find(selectableClass, id);
-						} catch (NumberFormatException e) {
-							realValue = null;
+					if (stringValue.equals("null")) {
+						filterValues.put(stringKey, NullValue.NULL_VALUE);
+					} else {
+						Object realValue = converter.getAsObject(FacesContext.getCurrentInstance(), null, stringValue);
+						if (realValue == null) {
+							try {
+								Integer id = Integer.parseInt(stringValue);
+								AbstractCriterion<E, ?> abstractCriterion = criterions.get(stringKey);
+								Class<?> selectableClass = abstractCriterion.getSelectableClass();
+								realValue = provideEntityManage().find(selectableClass, id);
+							} catch (NumberFormatException e) {
+								realValue = null;
+							}
 						}
+						filterValues.put(stringKey, realValue);
 					}
-					filterValues.put(stringKey, realValue);
 				}
 			}
 		}
@@ -491,13 +537,16 @@ public class Filter<E> implements MapNotifierListener {
 			String keyword = effectiveFilter.getKeyword();
 			Object value = filterValues.get(keyword);
 			if (value != null) {
-				String id = value.toString();
-				try {
-					id = PropertyUtils.getProperty(value, "id").toString();
-				} catch (Throwable e) {
-					id = value.toString();
+				String id = null;
+				if (NullValue.NULL_VALUE.equals(value)) {
+					id = "null";
+				} else {
+					try {
+						id = PropertyUtils.getProperty(value, "id").toString();
+					} catch (Throwable e) {
+						id = value.toString();
+					}
 				}
-				
 				if (sb.length() != 0) {
 					sb.append("&");
 				}

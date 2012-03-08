@@ -294,10 +294,18 @@ public class HQLQueryBuilder<T> {
 		return count.intValue();
 	}
 
-	@SuppressWarnings({ "unchecked", "rawtypes" })
+	public List<?> getListDistinct(String path) {
+		StringBuilder sb = new StringBuilder("select distinct ").append(getShortProperty(path));
+		return getListWithProvidedFrom(sb);
+	}
+
 	public List<T> getList() {
 		StringBuilder sb = new StringBuilder("select distinct this_");
+		return getListWithProvidedFrom(sb);
+	}
 
+	@SuppressWarnings({ "unchecked", "rawtypes" })
+	private List<T> getListWithProvidedFrom(StringBuilder sb) {
 		// First build where, to get all paths in from
 		StringBuilder sbWhere = new StringBuilder();
 		HQLRestrictionValues values = buildQueryWhere(sbWhere);
