@@ -532,6 +532,10 @@ public class Filter<E> implements MapNotifierListener {
 		modified();
 	}
 
+	public void setUrlParameters(String urlParameters) {
+		//
+	}
+
 	public String getUrlParameters() {
 		StringBuilder sb = new StringBuilder();
 
