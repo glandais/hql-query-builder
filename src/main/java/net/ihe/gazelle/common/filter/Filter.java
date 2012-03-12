@@ -29,6 +29,7 @@ import javax.persistence.EntityManager;
 
 import net.ihe.gazelle.common.filter.action.DatatableStateHolderBean;
 import net.ihe.gazelle.common.filter.criterion.AbstractCriterion;
+import net.ihe.gazelle.common.filter.criterion.PropertyCriterion;
 import net.ihe.gazelle.common.filter.criterion.ValueFormatter;
 import net.ihe.gazelle.common.filter.hql.HQLQueryBuilder;
 import net.ihe.gazelle.common.filter.hql.HQLStatistic;
@@ -347,6 +348,7 @@ public class Filter<E> implements MapNotifierListener {
 
 					log.debug("refreshing filter possible values for " + keyword);
 
+					@SuppressWarnings("rawtypes")
 					HQLQueryBuilder<?> queryBuilder = new HQLQueryBuilder(em, effectiveFilter.getSelectableClass());
 					List<?> distincts = queryBuilder.getList();
 
@@ -583,5 +585,23 @@ public class Filter<E> implements MapNotifierListener {
 		}
 
 		return sb.toString();
+	}
+
+	public Object getRealFilterValue(String filterId) {
+		Object filterValue = filterValues.get(filterId);
+		if (possibleValues != null && possibleValues.get(filterId) != null && possibleValues.get(filterId).size() == 1) {
+			filterValue = possibleValues.get(filterId).get(0);
+		} else if (filterValue == null || NullValue.NULL_VALUE.equals(filterValue)) {
+			return null;
+		}
+		AbstractCriterion<E, ?> criterion = criterions.get(filterId);
+		if (criterion instanceof PropertyCriterion) {
+			PropertyCriterion propertyCriterion = (PropertyCriterion) criterion;
+			Class realSelectableClass = propertyCriterion.getRealSelectableClass();
+			if (!realSelectableClass.equals(propertyCriterion.getSelectableClass())) {
+				filterValue = propertyCriterion.getRealValue(filterValue, provideEntityManage());
+			}
+		}
+		return filterValue;
 	}
 }

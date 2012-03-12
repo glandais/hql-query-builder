@@ -42,6 +42,10 @@
 			<artifactId>jboss-seam</artifactId>
 			<version>${version.seam}</version>
 		</dependency>
+		<dependency>
+			<groupId>org.jboss.seam</groupId>
+			<artifactId>jboss-seam-pdf</artifactId>
+		</dependency>
 
 		<dependency>
 			<groupId>org.richfaces.framework</groupId>

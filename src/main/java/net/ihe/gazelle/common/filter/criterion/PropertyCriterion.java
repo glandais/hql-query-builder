@@ -15,7 +15,12 @@
  *******************************************************************************/
 package net.ihe.gazelle.common.filter.criterion;
 
+import java.util.List;
+
+import javax.persistence.EntityManager;
+
 import net.ihe.gazelle.common.filter.AbstractEntity;
+import net.ihe.gazelle.common.filter.hql.HQLQueryBuilder;
 
 import org.apache.commons.lang.StringUtils;
 
@@ -23,12 +28,14 @@ public abstract class PropertyCriterion<E, F> extends AbstractCriterion<E, F> {
 
 	protected String associationPath;
 	protected String propertyName;
+	private Class<?> realSelectableClass;
 
 	public PropertyCriterion(AbstractEntity<E> entity, Class<F> selectableClass, String keyword,
 			String associationPath, String propertyName) {
 		super(entity, selectableClass, keyword);
 		this.associationPath = associationPath;
 		this.propertyName = propertyName;
+		this.realSelectableClass = selectableClass;
 	}
 
 	public String getPath() {
@@ -39,6 +46,28 @@ public abstract class PropertyCriterion<E, F> extends AbstractCriterion<E, F> {
 			path = associationPath + "." + propertyName;
 		}
 		return path;
+	}
+
+	/**
+	 * Override this method if you want to see the info link for the linked
+	 * item.
+	 * 
+	 * @return
+	 */
+	public Class<?> getRealSelectableClass() {
+		return realSelectableClass;
+	}
+
+	public Object getRealValue(F filterValue, EntityManager entityManager) {
+		HQLQueryBuilder<?> builder = new HQLQueryBuilder(entityManager, getRealSelectableClass());
+		builder.setMaxResults(2);
+		builder.addEq(propertyName, filterValue);
+		List<?> list = builder.getList();
+		if (list.size() == 1) {
+			return list.get(0);
+		} else {
+			return null;
+		}
 	}
 
 }
