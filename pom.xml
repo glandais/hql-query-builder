@@ -4,21 +4,21 @@
 	<parent>
 		<groupId>net.ihe.gazelle.datable</groupId>
 		<artifactId>gazelle-datatable</artifactId>
-		<version>1.13-SNAPSHOT</version>
+		<version>1.13</version>
 		<relativePath>../pom.xml</relativePath>
 	</parent>
 
 	<modelVersion>4.0.0</modelVersion>
 	<artifactId>gazelle-datatable-jar</artifactId>
-	<version>1.13-SNAPSHOT</version>
+	<version>1.13</version>
 	<packaging>ejb</packaging>
 
 	<name>gazelle-datatable-jar</name>
 
 	<scm>
-		<connection>scm:svn:svn://scm.gforge.inria.fr/svn/gazelle/Maven/gazelle-datatable/trunk/gazelle-datatable-jar</connection>
-		<developerConnection>scm:svn:svn+ssh://scm.gforge.inria.fr/svn/gazelle/Maven/gazelle-datatable/trunk/gazelle-datatable-jar</developerConnection>
-	  <url>http://fisheye.jboss.org/browse/Seam/parent/gazelle-seam/tags/gazelle-seam-1.37/gazelle-datatable/gazelle-datatable-jar</url>
+		<connection>scm:svn:svn://scm.gforge.inria.fr/svn/gazelle/Maven/gazelle-datatable/tags/gazelle-datatable-1.13/gazelle-datatable-jar</connection>
+		<developerConnection>scm:svn:svn+ssh://scm.gforge.inria.fr/svn/gazelle/Maven/gazelle-datatable/tags/gazelle-datatable-1.13/gazelle-datatable-jar</developerConnection>
+	  <url>http://fisheye.jboss.org/browse/Seam/parent/gazelle-seam/tags/gazelle-datatable-1.13/gazelle-datatable-jar</url>
   </scm>
 
 	<organization>
