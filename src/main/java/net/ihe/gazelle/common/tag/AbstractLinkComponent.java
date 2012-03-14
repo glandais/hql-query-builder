@@ -97,13 +97,17 @@ public abstract class AbstractLinkComponent extends UIComponentBase {
 			Iterator<?> iterator = iterable.iterator();
 			while (iterator.hasNext()) {
 				Object element = iterator.next();
-				outputLink(context, writer, element, isDetailed, contextPath);
-				if (iterator.hasNext()) {
-					writer.write(" / ");
+				if (element != null) {
+					outputLink(context, writer, element, isDetailed, contextPath);
+					if (iterator.hasNext()) {
+						writer.write(" / ");
+					}
 				}
 			}
 		} else {
-			outputLink(context, writer, value, isDetailed, contextPath);
+			if (value != null) {
+				outputLink(context, writer, value, isDetailed, contextPath);
+			}
 		}
 		writer.flush();
 	}
