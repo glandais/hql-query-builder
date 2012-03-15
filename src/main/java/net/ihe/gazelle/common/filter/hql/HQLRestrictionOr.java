@@ -1,23 +1,14 @@
 package net.ihe.gazelle.common.filter.hql;
 
-public class HQLRestrictionOr implements HQLRestriction {
+public class HQLRestrictionOr extends HQLRestrictionLogical {
 
-	private HQLRestriction restriction1;
-	private HQLRestriction restriction2;
-
-	HQLRestrictionOr(HQLRestriction restriction1, HQLRestriction restriction2) {
-		super();
-		this.restriction1 = restriction1;
-		this.restriction2 = restriction2;
+	public HQLRestrictionOr(HQLRestriction... restrictions) {
+		super(restrictions);
 	}
 
 	@Override
-	public void toHQL(HQLQueryBuilder<?> queryBuilder, HQLRestrictionValues values, StringBuilder sb) {
-		sb.append("(");
-		restriction1.toHQL(queryBuilder, values, sb);
-		sb.append(" OR ");
-		restriction2.toHQL(queryBuilder, values, sb);
-		sb.append(")");
+	public String getLogicalOperator() {
+		return "OR";
 	}
 
 }
