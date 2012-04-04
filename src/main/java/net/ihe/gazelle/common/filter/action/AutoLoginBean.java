@@ -70,10 +70,12 @@ public class AutoLoginBean implements Serializable {
 		FacesContext context = FacesContext.getCurrentInstance();
 		HttpServletRequest request = (HttpServletRequest) context.getExternalContext().getRequest();
 		Cookie[] cookies = request.getCookies();
-		for (Cookie cookie : cookies) {
-			if (cookie.getName().equals("UserLoggedOut")) {
-				String value = cookie.getValue();
-				result = Boolean.parseBoolean(value);
+		if (cookies != null) {
+			for (Cookie cookie : cookies) {
+				if (cookie.getName().equals("UserLoggedOut")) {
+					String value = cookie.getValue();
+					result = Boolean.parseBoolean(value);
+				}
 			}
 		}
 		return result;
