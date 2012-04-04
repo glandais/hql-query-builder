@@ -17,11 +17,11 @@ package net.ihe.gazelle.common.filter.action;
 
 import java.io.Serializable;
 
+import net.ihe.gazelle.common.LinkDataProvider;
+import net.ihe.gazelle.common.LinkDataProviderService;
 import net.ihe.gazelle.common.filter.Filter;
 import net.ihe.gazelle.common.filter.criterion.AbstractCriterion;
 import net.ihe.gazelle.common.filter.criterion.PropertyCriterion;
-import net.ihe.gazelle.common.tag.AbstractLinkComponent;
-import net.ihe.gazelle.common.tag.LinkDataProvider;
 
 import org.jboss.seam.ScopeType;
 import org.jboss.seam.annotations.Name;
@@ -44,7 +44,7 @@ public class FilterSuggestBean implements Serializable {
 			PropertyCriterion propertyCriterion = (PropertyCriterion) criterion;
 			valueClass = propertyCriterion.getRealSelectableClass();
 		}
-		LinkDataProvider provider = AbstractLinkComponent.getProviderForClass(valueClass);
+		LinkDataProvider provider = LinkDataProviderService.getProviderForClass(valueClass);
 		if (provider != null) {
 			return true;
 		} else {
