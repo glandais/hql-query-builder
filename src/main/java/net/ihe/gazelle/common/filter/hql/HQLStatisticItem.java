@@ -6,15 +6,15 @@ public class HQLStatisticItem {
 
 	private HQLRestriction restriction;
 
-	public HQLStatisticItem(String path, HQLRestriction restriction) {
+	public HQLStatisticItem(Object path, HQLRestriction restriction) {
 		super();
-		this.path = path;
+		this.path = path.toString();
 		this.restriction = restriction;
 	}
 
-	public HQLStatisticItem(String path) {
+	public HQLStatisticItem(Object path) {
 		super();
-		this.path = path;
+		this.path = path.toString();
 		this.restriction = null;
 	}
 

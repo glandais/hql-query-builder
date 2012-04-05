@@ -74,19 +74,19 @@ public class HQLQueryBuilder<T> {
 		pathToClass.put("this_", entityClass);
 	}
 
-	public void addEq(String propertyName, Object value) {
+	public void addEq(Object propertyName, Object value) {
 		restrictions.add(HQLRestrictions.eq(propertyName, value));
 	}
 
-	public void addIn(String propertyName, Collection<?> elements) {
+	public void addIn(Object propertyName, Collection<?> elements) {
 		restrictions.add(HQLRestrictions.in(propertyName, elements));
 	}
 
-	public void addLike(String propertyName, String value) {
+	public void addLike(Object propertyName, String value) {
 		restrictions.add(HQLRestrictions.like(propertyName, value));
 	}
 
-	public void addOrder(String propertyName, boolean ascending) {
+	public void addOrder(Object propertyName, boolean ascending) {
 		String shortProperty = getShortProperty(propertyName);
 		orders.add(new HQLOrder(shortProperty, ascending));
 	}
@@ -195,7 +195,7 @@ public class HQLQueryBuilder<T> {
 		}
 	}
 
-	private Query createRealQuery(StringBuilder sb) {
+	protected Query createRealQuery(StringBuilder sb) {
 		log.debug("*******************");
 		log.debug(sb.toString());
 		log.debug("*******************");
@@ -209,7 +209,7 @@ public class HQLQueryBuilder<T> {
 	 *            A path to an object mapped by Hibernate, starting with this_.
 	 * @return the alias
 	 */
-	private HQLAlias getAlias(String path) {
+	protected HQLAlias getAlias(String path) {
 		HQLAlias hqlAlias = aliases.get(path);
 		if (hqlAlias == null) {
 			int lastIndexOf = path.lastIndexOf('.');
@@ -244,7 +244,7 @@ public class HQLQueryBuilder<T> {
 		return hqlAlias;
 	}
 
-	private ClassMetadata getClassMetadata(String path) {
+	protected ClassMetadata getClassMetadata(String path) {
 		String[] parts = StringUtils.split(path, ".");
 		String currentPath = "";
 
@@ -305,7 +305,7 @@ public class HQLQueryBuilder<T> {
 	}
 
 	@SuppressWarnings({ "unchecked", "rawtypes" })
-	private List<T> getListWithProvidedFrom(StringBuilder sb) {
+	protected List<T> getListWithProvidedFrom(StringBuilder sb) {
 		// First build where, to get all paths in from
 		StringBuilder sbWhere = new StringBuilder();
 		HQLRestrictionValues values = buildQueryWhere(sbWhere);
@@ -345,10 +345,10 @@ public class HQLQueryBuilder<T> {
 	}
 
 	@SuppressWarnings({ "unchecked", "rawtypes" })
-	public List<?> getMultiSelect(String... paths) {
+	public List<?> getMultiSelect(Object... paths) {
 		StringBuilder sb = new StringBuilder("select ");
 		for (int i = 0; i < paths.length; i++) {
-			String path = paths[i];
+			String path = paths[i].toString();
 			if (i != 0) {
 				sb.append(", ");
 			}
@@ -396,7 +396,11 @@ public class HQLQueryBuilder<T> {
 		return finalResult;
 	}
 
-	public String getShortProperty(String propertyName) {
+	public String getShortProperty(Object propertyNameObject) {
+		String propertyName = null;
+		if (propertyNameObject != null) {
+			propertyName = propertyNameObject.toString();
+		}
 		if ((propertyName == null) || (propertyName.equals(""))) {
 			return "this_";
 		}
@@ -442,17 +446,17 @@ public class HQLQueryBuilder<T> {
 	 *         the path (can be null). Second one is the number of entities.
 	 */
 	@SuppressWarnings("unchecked")
-	public List<Object[]> getStatistics(String path) {
+	public List<Object[]> getStatistics(Object path) {
 
-		path = patchPropertyName(path);
+		path = patchPropertyName(path.toString());
 
 		String pathGroupedBy = null;
 
-		ClassMetadata classMetadata = getClassMetadata(path);
+		ClassMetadata classMetadata = getClassMetadata(path.toString());
 
 		Class<?> mappedClass;
 		if (classMetadata == null) {
-			pathGroupedBy = path;
+			pathGroupedBy = path.toString();
 			mappedClass = null;
 		} else {
 			pathGroupedBy = path + ".id";
@@ -677,7 +681,7 @@ public class HQLQueryBuilder<T> {
 	 *            the property name
 	 * @return the string
 	 */
-	private String patchPropertyName(String propertyName) {
+	protected String patchPropertyName(String propertyName) {
 		if (!propertyName.startsWith("this_.")) {
 			if (!propertyName.startsWith("this.")) {
 				propertyName = "this." + propertyName;
@@ -704,9 +708,9 @@ public class HQLQueryBuilder<T> {
 		this.cachable = cachable;
 	}
 
-	public void addFetch(String path) {
-		getShortProperty(path + ".id");
-		fetches.add(patchPropertyName(path));
+	public void addFetch(Object path) {
+		getShortProperty(path.toString() + ".id");
+		fetches.add(patchPropertyName(path.toString()));
 	}
 
 }
