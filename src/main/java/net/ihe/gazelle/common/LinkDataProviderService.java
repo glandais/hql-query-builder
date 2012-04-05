@@ -11,6 +11,11 @@ public class LinkDataProviderService {
 		super();
 	}
 
+	/**
+	 * @param valueClass
+	 *            class to be supported
+	 * @return a provider supporting this valueClass
+	 */
 	public static LinkDataProvider getProviderForClass(Class<?> valueClass) {
 		for (LinkDataProvider dataProvider : PROVIDERS) {
 			List<Class<?>> supportedClasses = dataProvider.getSupportedClasses();

@@ -47,47 +47,7 @@ import org.slf4j.LoggerFactory;
 
 public class Filter<E> implements MapNotifierListener {
 
-	private class ValueCount implements Comparable<ValueCount> {
-		Object value;
-		Integer count;
-		AbstractCriterion<E, Object> effectiveFilterObject;
-
-		public ValueCount(Object value, Integer count, AbstractCriterion<E, Object> effectiveFilterObject) {
-			super();
-			this.value = value;
-			this.count = count;
-			this.effectiveFilterObject = effectiveFilterObject;
-		}
-
-		@Override
-		public int compareTo(ValueCount o) {
-			if (o == null) {
-				return 1;
-			}
-			return compareObjects(effectiveFilterObject, value, o.value);
-		}
-
-	}
-
 	private static Logger log = LoggerFactory.getLogger(Filter.class);
-
-	public static final int compareObjects(AbstractCriterion<?, Object> effectiveFilterObject, Object o1, Object o2) {
-		if (o1 == null || NullValue.NULL_VALUE.equals(o1)) {
-			return -1;
-		}
-		if (o2 == null || NullValue.NULL_VALUE.equals(o2)) {
-			return 1;
-		}
-		String l1 = effectiveFilterObject.getSelectableLabel(o1);
-		if (l1 == null) {
-			return -1;
-		}
-		String l2 = effectiveFilterObject.getSelectableLabel(o2);
-		if (l2 == null) {
-			return 1;
-		}
-		return l1.compareToIgnoreCase(l2);
-	}
 
 	protected AbstractEntity<E> entity;
 
