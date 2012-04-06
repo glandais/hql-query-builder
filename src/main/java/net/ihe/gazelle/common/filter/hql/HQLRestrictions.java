@@ -8,28 +8,60 @@ public class HQLRestrictions {
 		super();
 	}
 
-	public static HQLRestriction eq(Object propertyName, Object value) {
-		return new HQLRestrictionEq(propertyName.toString(), value);
+	public static HQLRestriction eq(String propertyName, Object value) {
+		return new HQLRestrictionEq(propertyName, value);
 	}
 
-	public static HQLRestriction neq(Object propertyName, Object value) {
-		return new HQLRestrictionNeq(propertyName.toString(), value);
+	public static HQLRestriction neq(String propertyName, Object value) {
+		return new HQLRestrictionNeq(propertyName, value);
 	}
 
-	public static HQLRestriction in(Object propertyName, Collection<?> elements) {
-		return new HQLRestrictionIn(propertyName.toString(), elements);
+	public static HQLRestriction in(String propertyName, Collection<?> elements) {
+		return new HQLRestrictionIn(propertyName, elements);
 	}
 
-	public static HQLRestriction nin(Object propertyName, Collection<?> elements) {
-		return new HQLRestrictionNotIn(propertyName.toString(), elements);
+	public static HQLRestriction nin(String propertyName, Collection<?> elements) {
+		return new HQLRestrictionNotIn(propertyName, elements);
 	}
 
-	public static HQLRestriction like(Object propertyName, String value, HQLRestrictionLikeMatchMode matchMode) {
-		return new HQLRestrictionLike(propertyName.toString(), value, matchMode);
+	public static HQLRestriction like(String propertyName, String value, HQLRestrictionLikeMatchMode matchMode) {
+		return new HQLRestrictionLike(propertyName, value, matchMode);
 	}
 
-	public static HQLRestriction like(Object propertyName, String value) {
-		return new HQLRestrictionLike(propertyName.toString(), value);
+	public static HQLRestriction like(String propertyName, String value) {
+		return new HQLRestrictionLike(propertyName, value);
+	}
+
+	public static HQLRestriction isNotNull(String propertyName) {
+		return new HQLRestrictionIsNotNull(propertyName);
+	}
+
+	public static HQLRestriction isNull(String propertyName) {
+		return new HQLRestrictionIsNull(propertyName);
+	}
+
+	public static HQLRestriction ge(String propertyName, Object value) {
+		return new HQLRestrictionCompare(propertyName, value, ">=");
+	}
+
+	public static HQLRestriction le(String propertyName, Object value) {
+		return new HQLRestrictionCompare(propertyName, value, "<=");
+	}
+
+	public static HQLRestriction gt(String propertyName, Object value) {
+		return new HQLRestrictionCompare(propertyName, value, ">");
+	}
+
+	public static HQLRestriction lt(String propertyName, Object value) {
+		return new HQLRestrictionCompare(propertyName, value, "<");
+	}
+
+	public static HQLRestriction isNotEmpty(String propertyName) {
+		return new HQLRestrictionIsNotEmpty(propertyName);
+	}
+
+	public static HQLRestriction isEmpty(String propertyName) {
+		return new HQLRestrictionIsEmpty(propertyName);
 	}
 
 	public static HQLRestriction or(HQLRestriction... restrictions) {
@@ -38,38 +70,6 @@ public class HQLRestrictions {
 
 	public static HQLRestriction and(HQLRestriction... restrictions) {
 		return new HQLRestrictionAnd(restrictions);
-	}
-
-	public static HQLRestriction isNotNull(Object propertyName) {
-		return new HQLRestrictionIsNotNull(propertyName.toString());
-	}
-
-	public static HQLRestriction isNull(Object propertyName) {
-		return new HQLRestrictionIsNull(propertyName.toString());
-	}
-
-	public static HQLRestriction ge(Object propertyName, Object value) {
-		return new HQLRestrictionCompare(propertyName.toString(), value, ">=");
-	}
-
-	public static HQLRestriction le(Object propertyName, Object value) {
-		return new HQLRestrictionCompare(propertyName.toString(), value, "<=");
-	}
-
-	public static HQLRestriction gt(Object propertyName, Object value) {
-		return new HQLRestrictionCompare(propertyName.toString(), value, ">");
-	}
-
-	public static HQLRestriction lt(Object propertyName, Object value) {
-		return new HQLRestrictionCompare(propertyName.toString(), value, "<");
-	}
-
-	public static HQLRestriction isNotEmpty(Object propertyName) {
-		return new HQLRestrictionIsNotEmpty(propertyName.toString());
-	}
-
-	public static HQLRestriction isEmpty(Object propertyName) {
-		return new HQLRestrictionIsEmpty(propertyName.toString());
 	}
 
 }

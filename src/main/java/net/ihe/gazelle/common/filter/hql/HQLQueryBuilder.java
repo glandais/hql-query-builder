@@ -26,7 +26,7 @@ import org.hibernate.type.Type;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class HQLQueryBuilder<T> {
+public class HQLQueryBuilder<T> implements HQLQueryBuilderInterface<T> {
 
 	private static Logger log = LoggerFactory.getLogger(HQLQueryBuilder.class);
 	private static final String LINE_FEED = "\r\n";
@@ -74,19 +74,19 @@ public class HQLQueryBuilder<T> {
 		pathToClass.put("this_", entityClass);
 	}
 
-	public void addEq(Object propertyName, Object value) {
+	public void addEq(String propertyName, Object value) {
 		restrictions.add(HQLRestrictions.eq(propertyName, value));
 	}
 
-	public void addIn(Object propertyName, Collection<?> elements) {
+	public void addIn(String propertyName, Collection<?> elements) {
 		restrictions.add(HQLRestrictions.in(propertyName, elements));
 	}
 
-	public void addLike(Object propertyName, String value) {
+	public void addLike(String propertyName, String value) {
 		restrictions.add(HQLRestrictions.like(propertyName, value));
 	}
 
-	public void addOrder(Object propertyName, boolean ascending) {
+	public void addOrder(String propertyName, boolean ascending) {
 		String shortProperty = getShortProperty(propertyName);
 		orders.add(new HQLOrder(shortProperty, ascending));
 	}
@@ -344,11 +344,19 @@ public class HQLQueryBuilder<T> {
 		return finalResult;
 	}
 
+	public List<?> getMultiSelect(HQLSafePath<?>... paths) {
+		String[] pathsString = new String[paths.length];
+		for (int i = 0; i < paths.length; i++) {
+			pathsString[i] = paths[i].toString();
+		}
+		return getMultiSelect(pathsString);
+	}
+
 	@SuppressWarnings({ "unchecked", "rawtypes" })
-	public List<?> getMultiSelect(Object... paths) {
+	public List<?> getMultiSelect(String... paths) {
 		StringBuilder sb = new StringBuilder("select ");
 		for (int i = 0; i < paths.length; i++) {
-			String path = paths[i].toString();
+			String path = paths[i];
 			if (i != 0) {
 				sb.append(", ");
 			}
@@ -396,11 +404,7 @@ public class HQLQueryBuilder<T> {
 		return finalResult;
 	}
 
-	public String getShortProperty(Object propertyNameObject) {
-		String propertyName = null;
-		if (propertyNameObject != null) {
-			propertyName = propertyNameObject.toString();
-		}
+	public String getShortProperty(String propertyName) {
 		if ((propertyName == null) || (propertyName.equals(""))) {
 			return "this_";
 		}
@@ -446,7 +450,7 @@ public class HQLQueryBuilder<T> {
 	 *         the path (can be null). Second one is the number of entities.
 	 */
 	@SuppressWarnings("unchecked")
-	public List<Object[]> getStatistics(Object path) {
+	public List<Object[]> getStatistics(String path) {
 
 		path = patchPropertyName(path.toString());
 
@@ -561,6 +565,7 @@ public class HQLQueryBuilder<T> {
 		return new ArrayList<HQLStatistic<T>>(resultBuilder.values());
 	}
 
+	@SuppressWarnings("unchecked")
 	private void getListWithStatisticsWithRestriction(List<HQLStatisticItem> items,
 			Map<Integer, HQLStatistic<T>> resultBuilder) {
 		for (int i = 0; i < items.size(); i++) {
@@ -594,6 +599,7 @@ public class HQLQueryBuilder<T> {
 		}
 	}
 
+	@SuppressWarnings("unchecked")
 	private void getListWithStatisticsWithoutRestriction(List<HQLStatisticItem> items,
 			Map<Integer, HQLStatistic<T>> resultBuilder) {
 		List<Integer> itemIndexes = new ArrayList<Integer>();
@@ -636,6 +642,7 @@ public class HQLQueryBuilder<T> {
 		}
 	}
 
+	@SuppressWarnings("unchecked")
 	public List<Object> getListWithStatisticsItems(List<HQLStatisticItem> items, HQLStatistic<T> item,
 			int statisticItemIndex) {
 
@@ -708,9 +715,20 @@ public class HQLQueryBuilder<T> {
 		this.cachable = cachable;
 	}
 
-	public void addFetch(Object path) {
+	public void addFetch(String path) {
 		getShortProperty(path.toString() + ".id");
 		fetches.add(patchPropertyName(path.toString()));
+	}
+
+	@Override
+	public T getUniqueResult() {
+		T result;
+
+		int oldMaxResults = maxResults;
+		setMaxResults(2);
+		maxResults = oldMaxResults;
+
+		return null;
 	}
 
 }
