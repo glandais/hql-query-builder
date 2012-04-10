@@ -722,13 +722,19 @@ public class HQLQueryBuilder<T> implements HQLQueryBuilderInterface<T> {
 
 	@Override
 	public T getUniqueResult() {
-		T result;
+		T result = null;
 
 		int oldMaxResults = maxResults;
-		setMaxResults(2);
+		setMaxResults(1);
 		maxResults = oldMaxResults;
 
-		return null;
+		List<T> list = getList();
+		if (list.size() > 0) {
+			result = list.get(0);
+		} else {
+			result = null;
+		}
+		return result;
 	}
 
 }
