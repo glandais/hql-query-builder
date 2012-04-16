@@ -276,6 +276,10 @@ public class HQLQueryBuilder<T> implements HQLQueryBuilderInterface<T> {
 		return classMetadata;
 	}
 
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
 	public int getCount() {
 		StringBuilder sb = new StringBuilder("select ");
 		sb.append("count(distinct this_)");
@@ -299,6 +303,10 @@ public class HQLQueryBuilder<T> implements HQLQueryBuilderInterface<T> {
 		return getListWithProvidedFrom(sb);
 	}
 
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
 	public List<T> getList() {
 		StringBuilder sb = new StringBuilder("select distinct this_");
 		return getListWithProvidedFrom(sb);
@@ -530,6 +538,10 @@ public class HQLQueryBuilder<T> implements HQLQueryBuilderInterface<T> {
 		return resultList;
 	}
 
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
 	public List<HQLStatistic<T>> getListWithStatistics(List<HQLStatisticItem> items) {
 
 		Map<Integer, HQLStatistic<T>> resultBuilder = new HashMap<Integer, HQLStatistic<T>>();
@@ -642,6 +654,10 @@ public class HQLQueryBuilder<T> implements HQLQueryBuilderInterface<T> {
 		}
 	}
 
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
 	@SuppressWarnings("unchecked")
 	public List<Object> getListWithStatisticsItems(List<HQLStatisticItem> items, HQLStatistic<T> item,
 			int statisticItemIndex) {
@@ -699,18 +715,34 @@ public class HQLQueryBuilder<T> implements HQLQueryBuilderInterface<T> {
 		return propertyName;
 	}
 
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
 	public void setFirstResult(int firstResult) {
 		this.firstResult = firstResult;
 	}
 
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
 	public void setMaxResults(int maxResults) {
 		this.maxResults = maxResults;
 	}
 
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
 	public boolean isCachable() {
 		return cachable;
 	}
 
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
 	public void setCachable(boolean cachable) {
 		this.cachable = cachable;
 	}
@@ -720,6 +752,9 @@ public class HQLQueryBuilder<T> implements HQLQueryBuilderInterface<T> {
 		fetches.add(patchPropertyName(path.toString()));
 	}
 
+	/**
+	 * {@inheritDoc}
+	 */
 	@Override
 	public T getUniqueResult() {
 		T result = null;
