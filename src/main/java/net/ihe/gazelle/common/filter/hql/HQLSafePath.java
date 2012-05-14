@@ -36,35 +36,67 @@ public abstract class HQLSafePath<T> {
 	}
 
 	public void eq(T value) {
-		queryBuilder.addRestriction(new HQLRestrictionEq(path, value));
+		queryBuilder.addRestriction(eqRestriction(value));
 	}
 
 	public void neq(T value) {
-		queryBuilder.addRestriction(new HQLRestrictionNeq(path, value));
+		queryBuilder.addRestriction(neqRestriction(value));
 	}
 
 	public void in(Collection<? extends T> elements) {
-		queryBuilder.addRestriction(new HQLRestrictionIn(path, elements));
+		queryBuilder.addRestriction(inRestriction(elements));
 	}
 
 	public void nin(Collection<? extends T> elements) {
-		queryBuilder.addRestriction(new HQLRestrictionNotIn(path, elements));
+		queryBuilder.addRestriction(ninRestriction(elements));
 	}
 
 	public void isNotNull() {
-		queryBuilder.addRestriction(new HQLRestrictionIsNotNull(path));
+		queryBuilder.addRestriction(isNotNullRestriction());
 	}
 
 	public void isNull() {
-		queryBuilder.addRestriction(new HQLRestrictionIsNull(path));
+		queryBuilder.addRestriction(isNullRestriction());
 	}
 
 	public void isNotEmpty() {
-		queryBuilder.addRestriction(new HQLRestrictionIsNotEmpty(path));
+		queryBuilder.addRestriction(isNotEmptyRestriction());
 	}
 
 	public void isEmpty() {
-		queryBuilder.addRestriction(new HQLRestrictionIsEmpty(path));
+		queryBuilder.addRestriction(isEmptyRestriction());
+	}
+
+	public HQLRestriction eqRestriction(T value) {
+		return new HQLRestrictionEq(path, value);
+	}
+
+	public HQLRestriction neqRestriction(T value) {
+		return new HQLRestrictionNeq(path, value);
+	}
+
+	public HQLRestriction inRestriction(Collection<? extends T> elements) {
+		return new HQLRestrictionIn(path, elements);
+	}
+
+	public HQLRestriction ninRestriction(Collection<? extends T> elements) {
+		return new HQLRestrictionNotIn(path, elements);
+	}
+
+	public HQLRestriction isNotNullRestriction() {
+		return new HQLRestrictionIsNotNull(path);
+	}
+
+	public HQLRestriction isNullRestriction() {
+		return new HQLRestrictionIsNull(path);
+	}
+
+	public HQLRestriction isNotEmptyRestriction() {
+		return new HQLRestrictionIsNotEmpty(path);
+	}
+
+	public HQLRestriction isEmptyRestriction() {
+		return new HQLRestrictionIsEmpty(path);
 	}
 
 	@SuppressWarnings("unchecked")

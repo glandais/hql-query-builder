@@ -101,4 +101,12 @@ public interface HQLQueryBuilderInterface<T> {
 	 */
 	void setCachable(boolean cachable);
 
+	/**
+	 * Add a restriction to this query builder
+	 * 
+	 * @param restriction
+	 *            Restriction to add
+	 */
+	void addRestriction(HQLRestriction restriction);
+
 }
