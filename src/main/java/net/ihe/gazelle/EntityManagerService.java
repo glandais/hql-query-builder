@@ -12,7 +12,7 @@ public class EntityManagerService {
 		if (PROVIDER == null) {
 			synchronized (EntityManagerService.class) {
 				if (PROVIDER == null) {
-					ServiceLoader<EntityManagerProvider> providers = ServiceLoader.load(EntityManagerProvider.class, null);
+					ServiceLoader<EntityManagerProvider> providers = ServiceLoader.load(EntityManagerProvider.class);
 					if (providers.iterator().hasNext()) {
 						PROVIDER = providers.iterator().next();
 					} else {
