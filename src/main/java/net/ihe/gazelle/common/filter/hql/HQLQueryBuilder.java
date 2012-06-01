@@ -2,6 +2,7 @@ package net.ihe.gazelle.common.filter.hql;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
@@ -20,9 +21,6 @@ import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.hibernate.engine.SessionFactoryImplementor;
 import org.hibernate.metadata.ClassMetadata;
-import org.hibernate.type.BagType;
-import org.hibernate.type.CollectionType;
-import org.hibernate.type.Type;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -30,6 +28,11 @@ public class HQLQueryBuilder<T> implements HQLQueryBuilderInterface<T> {
 
 	private static Logger log = LoggerFactory.getLogger(HQLQueryBuilder.class);
 	private static final String LINE_FEED = "\r\n";
+
+	private static final Map<String, HQLQueryBuilderCache> cache = Collections
+			.synchronizedMap(new HashMap<String, HQLQueryBuilderCache>());
+
+	private HQLQueryBuilderCache hqlQueryBuilderCache;
 
 	private Map<String, HQLAlias> aliases = new LinkedHashMap<String, HQLAlias>();
 	private Set<String> aliasValues = new HashSet<String>();
@@ -42,10 +45,6 @@ public class HQLQueryBuilder<T> implements HQLQueryBuilderInterface<T> {
 	private int maxResults = -1;
 
 	private EntityManager entityManager;
-	private SessionFactoryImplementor factory;
-
-	private Map<String, ClassMetadata> pathToClassMetadata;
-	private Map<String, Class<?>> pathToClass;
 
 	private boolean leftJoinDone = false;
 
@@ -55,7 +54,7 @@ public class HQLQueryBuilder<T> implements HQLQueryBuilderInterface<T> {
 	public HQLQueryBuilder(EntityManager entityManager, Class<T> entityClass) {
 		super();
 		this.entityClass = entityClass;
-		this.factory = null;
+		SessionFactoryImplementor factory = null;
 		this.entityManager = entityManager;
 		Object delegate = entityManager.getDelegate();
 		if (delegate instanceof Session) {
@@ -68,10 +67,18 @@ public class HQLQueryBuilder<T> implements HQLQueryBuilderInterface<T> {
 		if (factory == null) {
 			throw new IllegalArgumentException();
 		}
-		pathToClassMetadata = new HashMap<String, ClassMetadata>();
-		pathToClassMetadata.put("this_", factory.getClassMetadata(entityClass));
-		pathToClass = new HashMap<String, Class<?>>();
-		pathToClass.put("this_", entityClass);
+		String canonicalName = entityClass.getCanonicalName();
+		HQLQueryBuilderCache hqlQueryBuilderCacheTmp = cache.get(canonicalName);
+		if (hqlQueryBuilderCacheTmp == null) {
+			synchronized (HQLQueryBuilder.class) {
+				hqlQueryBuilderCacheTmp = cache.get(canonicalName);
+				if (hqlQueryBuilderCacheTmp == null) {
+					hqlQueryBuilderCacheTmp = new HQLQueryBuilderCache(entityClass, factory);
+					cache.put(canonicalName, hqlQueryBuilderCacheTmp);
+				}
+			}
+		}
+		this.hqlQueryBuilderCache = hqlQueryBuilderCacheTmp;
 	}
 
 	public void addEq(String propertyName, Object value) {
@@ -212,16 +219,10 @@ public class HQLQueryBuilder<T> implements HQLQueryBuilderInterface<T> {
 	protected HQLAlias getAlias(String path) {
 		HQLAlias hqlAlias = aliases.get(path);
 		if (hqlAlias == null) {
-			int lastIndexOf = path.lastIndexOf('.');
-			String parentPath = path.substring(0, lastIndexOf);
-			String propertyName = path.substring(lastIndexOf + 1);
-
-			ClassMetadata classMetadata = getClassMetadata(parentPath);
-			Type propertyType = classMetadata.getPropertyType(propertyName);
-
 			int joinType = Criteria.LEFT_JOIN;
 
-			if (propertyType.getClass().isAssignableFrom(BagType.class)) {
+			boolean isBagType = hqlQueryBuilderCache.isBagType(path);
+			if (isBagType) {
 				if (!leftJoinDone) {
 					leftJoinDone = true;
 				} else {
@@ -229,51 +230,13 @@ public class HQLQueryBuilder<T> implements HQLQueryBuilderInterface<T> {
 				}
 			}
 
-			String alias = propertyName + "_";
-
-			Integer j = 1;
-			while (aliasValues.contains(alias)) {
-				alias = propertyName + "_" + j.toString();
-				j++;
-			}
+			String alias = hqlQueryBuilderCache.getAlias(path);
 
 			hqlAlias = new HQLAlias(path, alias, joinType);
 			aliases.put(path, hqlAlias);
 			aliasValues.add(alias);
 		}
 		return hqlAlias;
-	}
-
-	protected ClassMetadata getClassMetadata(String path) {
-		String[] parts = StringUtils.split(path, ".");
-		String currentPath = "";
-
-		ClassMetadata parentClassMetadata = null;
-		ClassMetadata classMetadata = null;
-
-		for (int i = 0; i < parts.length; i++) {
-			if (i != 0) {
-				currentPath = currentPath + ".";
-			}
-			currentPath = currentPath + parts[i];
-
-			classMetadata = pathToClassMetadata.get(currentPath);
-			if (classMetadata == null) {
-				Type propertyType = parentClassMetadata.getPropertyType(parts[i]);
-
-				Class<?> returnedClass = propertyType.getReturnedClass();
-				if (propertyType instanceof CollectionType) {
-					String role = ((CollectionType) propertyType).getRole();
-					propertyType = factory.getCollectionPersister(role).getElementType();
-					returnedClass = propertyType.getReturnedClass();
-				}
-				pathToClass.put(currentPath, returnedClass);
-				classMetadata = factory.getClassMetadata(returnedClass);
-				pathToClassMetadata.put(currentPath, classMetadata);
-			}
-			parentClassMetadata = classMetadata;
-		}
-		return classMetadata;
 	}
 
 	/**
@@ -464,7 +427,7 @@ public class HQLQueryBuilder<T> implements HQLQueryBuilderInterface<T> {
 
 		String pathGroupedBy = null;
 
-		ClassMetadata classMetadata = getClassMetadata(path.toString());
+		ClassMetadata classMetadata = hqlQueryBuilderCache.getClassMetadata(path.toString());
 
 		Class<?> mappedClass;
 		if (classMetadata == null) {
@@ -472,11 +435,10 @@ public class HQLQueryBuilder<T> implements HQLQueryBuilderInterface<T> {
 			mappedClass = null;
 		} else {
 			pathGroupedBy = path + ".id";
-			mappedClass = pathToClass.get(path);
+			mappedClass = hqlQueryBuilderCache.getPathToClass(path);
 		}
 
 		pathGroupedBy = getShortProperty(pathGroupedBy);
-		// getShortProperty(path)
 		StringBuilder sb = new StringBuilder("select " + pathGroupedBy + ", count(distinct this_)");
 
 		StringBuilder sbWhere = new StringBuilder();
