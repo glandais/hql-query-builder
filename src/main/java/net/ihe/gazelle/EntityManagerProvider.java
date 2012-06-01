@@ -6,4 +6,6 @@ public interface EntityManagerProvider {
 
 	public EntityManager providerEntityManager();
 
+	public int getWeight();
+
 }

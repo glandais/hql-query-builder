@@ -1,6 +1,8 @@
 package net.ihe.gazelle;
 
+import java.util.Comparator;
 import java.util.ServiceLoader;
+import java.util.TreeSet;
 
 import javax.persistence.EntityManager;
 
@@ -13,8 +15,18 @@ public class EntityManagerService {
 			synchronized (EntityManagerService.class) {
 				if (PROVIDER == null) {
 					ServiceLoader<EntityManagerProvider> providers = ServiceLoader.load(EntityManagerProvider.class);
-					if (providers.iterator().hasNext()) {
-						PROVIDER = providers.iterator().next();
+					TreeSet<EntityManagerProvider> providerSet = new TreeSet<EntityManagerProvider>(
+							new Comparator<EntityManagerProvider>() {
+								@Override
+								public int compare(EntityManagerProvider o1, EntityManagerProvider o2) {
+									return o1.getWeight() - o2.getWeight();
+								}
+							});
+					for (EntityManagerProvider entityManagerProvider : providers) {
+						providerSet.add(entityManagerProvider);
+					}
+					if (providerSet.size() > 0) {
+						PROVIDER = providerSet.first();
 					} else {
 						// FIXME log error
 					}
