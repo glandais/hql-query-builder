@@ -1,6 +1,5 @@
 package net.ihe.gazelle.common.filter.hql;
 
-import java.util.Collection;
 import java.util.List;
 
 public abstract class HQLSafePath<T> {
@@ -35,60 +34,12 @@ public abstract class HQLSafePath<T> {
 		return new HQLStatisticItem(path);
 	}
 
-	public void eq(T value) {
-		queryBuilder.addRestriction(eqRestriction(value));
-	}
-
-	public void neq(T value) {
-		queryBuilder.addRestriction(neqRestriction(value));
-	}
-
-	public void in(Collection<? extends T> elements) {
-		queryBuilder.addRestriction(inRestriction(elements));
-	}
-
-	public void nin(Collection<? extends T> elements) {
-		queryBuilder.addRestriction(ninRestriction(elements));
-	}
-
-	public void isNotNull() {
-		queryBuilder.addRestriction(isNotNullRestriction());
-	}
-
-	public void isNull() {
-		queryBuilder.addRestriction(isNullRestriction());
-	}
-
 	public void isNotEmpty() {
 		queryBuilder.addRestriction(isNotEmptyRestriction());
 	}
 
 	public void isEmpty() {
 		queryBuilder.addRestriction(isEmptyRestriction());
-	}
-
-	public HQLRestriction eqRestriction(T value) {
-		return new HQLRestrictionEq(path, value);
-	}
-
-	public HQLRestriction neqRestriction(T value) {
-		return new HQLRestrictionNeq(path, value);
-	}
-
-	public HQLRestriction inRestriction(Collection<? extends T> elements) {
-		return new HQLRestrictionIn(path, elements);
-	}
-
-	public HQLRestriction ninRestriction(Collection<? extends T> elements) {
-		return new HQLRestrictionNotIn(path, elements);
-	}
-
-	public HQLRestriction isNotNullRestriction() {
-		return new HQLRestrictionIsNotNull(path);
-	}
-
-	public HQLRestriction isNullRestriction() {
-		return new HQLRestrictionIsNull(path);
 	}
 
 	public HQLRestriction isNotEmptyRestriction() {

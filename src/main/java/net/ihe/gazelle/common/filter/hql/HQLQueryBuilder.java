@@ -275,6 +275,16 @@ public class HQLQueryBuilder<T> implements HQLQueryBuilderInterface<T> {
 		return getListWithProvidedFrom(sb);
 	}
 
+	@Override
+	public List<T> getListNullIfEmpty() {
+		List<T> result = getList();
+		if (result.size() == 0) {
+			return null;
+		} else {
+			return result;
+		}
+	}
+
 	@SuppressWarnings({ "unchecked", "rawtypes" })
 	protected List<T> getListWithProvidedFrom(StringBuilder sb) {
 		// First build where, to get all paths in from

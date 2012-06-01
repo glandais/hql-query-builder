@@ -29,6 +29,15 @@ public interface HQLQueryBuilderInterface<T> {
 	List<T> getList();
 
 	/**
+	 * Elements matching the restrictions
+	 * 
+	 * @return Return the list of elements matching this query, max size is max
+	 *         results from first item index is first result<br>
+	 *         If no element, list is null, not empty
+	 */
+	List<T> getListNullIfEmpty();
+
+	/**
 	 * Returns the first element
 	 * 
 	 * @return Return the first element matching this query<br>
