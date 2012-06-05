@@ -15,28 +15,21 @@
  *******************************************************************************/
 package net.ihe.gazelle.common.filter.criterion;
 
-import net.ihe.gazelle.common.filter.AbstractEntity;
 import net.ihe.gazelle.common.filter.NullValue;
 import net.ihe.gazelle.common.filter.ValueProvider;
 import net.ihe.gazelle.common.filter.hql.HQLQueryBuilder;
 
-public abstract class AbstractCriterion<E, F> {
+public abstract class AbstractCriterion<E, F> implements Criterion<E, F> {
 
-	private AbstractEntity<E> entity;
 	private Class<F> selectableClass;
 	private String keyword;
 	private ValueProvider valueFixer;
 	private ValueProvider valueInitiator;
 
-	public AbstractCriterion(AbstractEntity<E> entity, Class<F> selectableClass, String keyword) {
+	public AbstractCriterion(Class<F> selectableClass, String keyword) {
 		super();
-		this.entity = entity;
 		this.selectableClass = selectableClass;
 		this.keyword = keyword;
-	}
-
-	public AbstractEntity<E> getEntity() {
-		return entity;
 	}
 
 	public Class<F> getSelectableClass() {

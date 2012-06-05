@@ -20,7 +20,7 @@ import java.io.Serializable;
 import net.ihe.gazelle.common.LinkDataProvider;
 import net.ihe.gazelle.common.LinkDataProviderService;
 import net.ihe.gazelle.common.filter.Filter;
-import net.ihe.gazelle.common.filter.criterion.AbstractCriterion;
+import net.ihe.gazelle.common.filter.criterion.Criterion;
 import net.ihe.gazelle.common.filter.criterion.PropertyCriterion;
 
 import org.jboss.seam.ScopeType;
@@ -38,7 +38,7 @@ public class FilterSuggestBean implements Serializable {
 	}
 
 	public boolean supportsLink(Filter<?> filter, String filterId) {
-		AbstractCriterion<?, ?> criterion = filter.getCriterions().get(filterId);
+		Criterion<?, ?> criterion = filter.getCriterions().get(filterId);
 		Class<?> valueClass = criterion.getSelectableClass();
 		if (criterion instanceof PropertyCriterion) {
 			PropertyCriterion propertyCriterion = (PropertyCriterion) criterion;

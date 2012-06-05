@@ -18,16 +18,16 @@ package net.ihe.gazelle.common.filter;
 import java.util.ArrayList;
 import java.util.List;
 
-import net.ihe.gazelle.common.filter.criterion.AbstractCriterion;
+import net.ihe.gazelle.common.filter.criterion.Criterion;
 import net.ihe.gazelle.common.filter.criterion.ValueFormatter;
 
 public class Suggester<E, F> {
 
 	private Filter<E> filter;
 	private String keyword;
-	private AbstractCriterion<E, F> criterion;
+	private Criterion<E, F> criterion;
 
-	public Suggester(Filter<E> filter, String keyword, AbstractCriterion<E, F> criterion) {
+	public Suggester(Filter<E> filter, String keyword, Criterion<E, F> criterion) {
 		super();
 		this.filter = filter;
 		this.keyword = keyword;
@@ -49,7 +49,7 @@ public class Suggester<E, F> {
 		}
 		F selectedValue = (F) filter.getFilterValues().get(keyword);
 		if (selectedValue != null) {
-			String label = criterion.getSelectableLabel(selectedValue);
+			String label = Filter.getSelectableLabel(criterion, selectedValue);
 			label = ValueFormatter.abbreviate(label);
 			if (label != null && input != null && label.equalsIgnoreCase(input)) {
 				showAllItems = true;
@@ -60,7 +60,7 @@ public class Suggester<E, F> {
 			input = input.toLowerCase();
 			values = new ArrayList<F>();
 			for (F e : allValues) {
-				String label = criterion.getSelectableLabel(e);
+				String label = Filter.getSelectableLabel(criterion, e);
 				if (label != null) {
 					label = label.toLowerCase();
 					if (label.contains(input)) {

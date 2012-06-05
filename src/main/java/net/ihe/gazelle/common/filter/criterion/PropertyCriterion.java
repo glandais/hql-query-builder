@@ -19,7 +19,6 @@ import java.util.List;
 
 import javax.persistence.EntityManager;
 
-import net.ihe.gazelle.common.filter.AbstractEntity;
 import net.ihe.gazelle.common.filter.hql.HQLQueryBuilder;
 
 import org.apache.commons.lang.StringUtils;
@@ -30,9 +29,9 @@ public abstract class PropertyCriterion<E, F> extends AbstractCriterion<E, F> {
 	protected String propertyName;
 	private Class<?> realSelectableClass;
 
-	public PropertyCriterion(AbstractEntity<E> entity, Class<F> selectableClass, String keyword,
+	public PropertyCriterion(Class<F> selectableClass, String keyword,
 			String associationPath, String propertyName) {
-		super(entity, selectableClass, keyword);
+		super(selectableClass, keyword);
 		this.associationPath = associationPath;
 		this.propertyName = propertyName;
 		this.realSelectableClass = selectableClass;

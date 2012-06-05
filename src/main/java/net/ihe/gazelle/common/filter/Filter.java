@@ -28,7 +28,7 @@ import javax.faces.convert.Converter;
 import javax.persistence.EntityManager;
 
 import net.ihe.gazelle.common.filter.action.DatatableStateHolderBean;
-import net.ihe.gazelle.common.filter.criterion.AbstractCriterion;
+import net.ihe.gazelle.common.filter.criterion.Criterion;
 import net.ihe.gazelle.common.filter.criterion.PropertyCriterion;
 import net.ihe.gazelle.common.filter.criterion.ValueFormatter;
 import net.ihe.gazelle.common.filter.hql.HQLQueryBuilder;
@@ -49,9 +49,9 @@ public class Filter<E> implements MapNotifierListener {
 
 	private static Logger log = LoggerFactory.getLogger(Filter.class);
 
-	protected AbstractEntity<E> entity;
+	protected EntityFiltrable<E> entity;
 
-	protected Map<String, AbstractCriterion<E, ?>> criterions = new HashMap<String, AbstractCriterion<E, ?>>();
+	protected Map<String, Criterion<E, ?>> criterions = new HashMap<String, Criterion<E, ?>>();
 
 	// Value selected for each criterion
 	protected MapNotifier filterValues;
@@ -81,7 +81,15 @@ public class Filter<E> implements MapNotifierListener {
 
 	private Map<String, Suggester<E, Object>> suggesters;
 
-	public Filter(AbstractEntity<E> entity, List<AbstractCriterion<E, ?>> criterionsList,
+	public static final <E, F> String getSelectableLabel(Criterion<E, F> effectiveFilter, F value) {
+		if (NullValue.NULL_VALUE.equals(value)) {
+			return "Not defined";
+		} else {
+			return effectiveFilter.getSelectableLabelNotNull(value);
+		}
+	}
+
+	public Filter(EntityFiltrable<E> entity, List<Criterion<E, ?>> criterionsList,
 			Map<String, String> requestParameterMap) {
 		this(entity, criterionsList);
 		if (requestParameterMap != null) {
@@ -90,7 +98,7 @@ public class Filter<E> implements MapNotifierListener {
 	}
 
 	@SuppressWarnings({ "rawtypes", "unchecked" })
-	public Filter(AbstractEntity<E> entity, List<AbstractCriterion<E, ?>> criterionsList) {
+	public Filter(EntityFiltrable<E> entity, List<Criterion<E, ?>> criterionsList) {
 		super();
 		this.entity = entity;
 
@@ -106,9 +114,9 @@ public class Filter<E> implements MapNotifierListener {
 		formatters = new HashMap<String, ValueFormatter>();
 		converters = new HashMap<String, Converter>();
 
-		criterions = new HashMap<String, AbstractCriterion<E, ?>>();
+		criterions = new HashMap<String, Criterion<E, ?>>();
 
-		for (AbstractCriterion<E, ?> criterion : criterionsList) {
+		for (Criterion<E, ?> criterion : criterionsList) {
 			String keyword = criterion.getKeyword();
 
 			filterValues.put(keyword, null);
@@ -146,7 +154,7 @@ public class Filter<E> implements MapNotifierListener {
 	public void appendHibernateFilters(HQLQueryBuilder<E> queryBuilder, String excludedKeyword) {
 		log.debug("adding default filter for entity");
 		getEntity().appendDefaultFilter(queryBuilder);
-		for (AbstractCriterion<E, ?> effectiveFilter : criterions.values()) {
+		for (Criterion<E, ?> effectiveFilter : criterions.values()) {
 			// The value is provided
 			ValueProvider valueFixer = effectiveFilter.getValueFixer();
 			Object fixedValue = null;
@@ -158,7 +166,8 @@ public class Filter<E> implements MapNotifierListener {
 				}
 			}
 			if (fixedValue != null) {
-				effectiveFilter.filter(queryBuilder, fixedValue);
+				String path = effectiveFilter.getPath();
+				queryBuilder.addEq(path, fixedValue);
 			} else {
 				// The value can be selected
 				String keyword = effectiveFilter.getKeyword();
@@ -166,7 +175,8 @@ public class Filter<E> implements MapNotifierListener {
 					Object filterValue = filterValues.get(keyword);
 					if (filterValue != null) {
 						log.debug("adding filter " + keyword + " = " + filterValue);
-						effectiveFilter.filter(queryBuilder, filterValue);
+						String path = effectiveFilter.getPath();
+						queryBuilder.addEq(path, filterValue);
 					}
 				}
 			}
@@ -175,7 +185,7 @@ public class Filter<E> implements MapNotifierListener {
 
 	public void clear() {
 		filterValues.clear();
-		for (AbstractCriterion<E, ?> effectiveFilter : criterions.values()) {
+		for (Criterion<E, ?> effectiveFilter : criterions.values()) {
 			if (effectiveFilter.getValueInitiator() != null) {
 				Object value = null;
 				try {
@@ -194,11 +204,11 @@ public class Filter<E> implements MapNotifierListener {
 		return converters;
 	}
 
-	public Map<String, AbstractCriterion<E, ?>> getCriterions() {
+	public Map<String, Criterion<E, ?>> getCriterions() {
 		return criterions;
 	}
 
-	public AbstractEntity<E> getEntity() {
+	public EntityFiltrable<E> getEntity() {
 		return entity;
 	}
 
@@ -300,11 +310,11 @@ public class Filter<E> implements MapNotifierListener {
 			possibleValues = new HashMap<String, List<Object>>();
 
 			if (!isPossibleFiltered()) {
-				for (AbstractCriterion<E, ?> effectiveFilter : criterions.values()) {
+				for (Criterion<E, ?> effectiveFilter : criterions.values()) {
 					List<Object> listValues = new ArrayList<Object>();
 
 					String keyword = effectiveFilter.getKeyword();
-					AbstractCriterion<E, Object> effectiveFilterObject = (AbstractCriterion<E, Object>) effectiveFilter;
+					Criterion<E, Object> effectiveFilterObject = (Criterion<E, Object>) effectiveFilter;
 
 					log.debug("refreshing filter possible values for " + keyword);
 
@@ -328,7 +338,7 @@ public class Filter<E> implements MapNotifierListener {
 					possibleValuesCount = new HashMap<String, List<Integer>>();
 				}
 
-				for (AbstractCriterion<E, ?> effectiveFilter : criterions.values()) {
+				for (Criterion<E, ?> effectiveFilter : criterions.values()) {
 					String keyword = effectiveFilter.getKeyword();
 
 					log.debug("refreshing filter possible values for " + keyword);
@@ -348,7 +358,7 @@ public class Filter<E> implements MapNotifierListener {
 					}
 
 					String path = effectiveFilter.getPath();
-					AbstractCriterion<E, Object> effectiveFilterObject = (AbstractCriterion<E, Object>) effectiveFilter;
+					Criterion<E, Object> effectiveFilterObject = (Criterion<E, Object>) effectiveFilter;
 
 					List<Object> listValues = new ArrayList<Object>();
 
@@ -403,11 +413,11 @@ public class Filter<E> implements MapNotifierListener {
 	private void refreshStringValues() {
 		if (refreshStringValues) {
 			stringValues = new HashMap<String, Object>();
-			for (AbstractCriterion effectiveFilter : criterions.values()) {
+			for (Criterion effectiveFilter : criterions.values()) {
 				String keyword = effectiveFilter.getKeyword();
 				Object value = filterValues.get(keyword);
 				if (value != null) {
-					String selectableLabel = effectiveFilter.getSelectableLabel(value);
+					String selectableLabel = getSelectableLabel(effectiveFilter, value);
 					stringValues.put(keyword, selectableLabel);
 				}
 			}
@@ -476,7 +486,7 @@ public class Filter<E> implements MapNotifierListener {
 						if (realValue == null) {
 							try {
 								Integer id = Integer.parseInt(stringValue);
-								AbstractCriterion<E, ?> abstractCriterion = criterions.get(stringKey);
+								Criterion<E, ?> abstractCriterion = criterions.get(stringKey);
 								Class<?> selectableClass = abstractCriterion.getSelectableClass();
 								realValue = provideEntityManage().find(selectableClass, id);
 							} catch (NumberFormatException e) {
@@ -499,7 +509,7 @@ public class Filter<E> implements MapNotifierListener {
 	public String getUrlParameters() {
 		StringBuilder sb = new StringBuilder();
 
-		for (AbstractCriterion<E, ?> effectiveFilter : criterions.values()) {
+		for (Criterion<E, ?> effectiveFilter : criterions.values()) {
 			String keyword = effectiveFilter.getKeyword();
 			Object value = filterValues.get(keyword);
 			if (value != null) {
@@ -558,7 +568,7 @@ public class Filter<E> implements MapNotifierListener {
 		} else if (filterValue == null || NullValue.NULL_VALUE.equals(filterValue)) {
 			return null;
 		}
-		AbstractCriterion<E, ?> criterion = criterions.get(filterId);
+		Criterion<E, ?> criterion = criterions.get(filterId);
 		if (criterion instanceof PropertyCriterion) {
 			PropertyCriterion propertyCriterion = (PropertyCriterion) criterion;
 			Class realSelectableClass = propertyCriterion.getRealSelectableClass();

@@ -40,8 +40,8 @@ public class ValueFormatter {
 	public String format(Object o) {
 		String selectableLabel = "?";
 		if (o != null) {
-			AbstractCriterion criterion = (AbstractCriterion) filter.getCriterions().get(keyword);
-			selectableLabel = criterion.getSelectableLabel(o);
+			Criterion criterion = (Criterion) filter.getCriterions().get(keyword);
+			selectableLabel = Filter.getSelectableLabel(criterion, o);
 
 			selectableLabel = abbreviate(selectableLabel);
 
@@ -72,8 +72,8 @@ public class ValueFormatter {
 	public String formatLabel(Object o) {
 		String selectableLabel = "?";
 		if (o != null) {
-			AbstractCriterion criterion = (AbstractCriterion) filter.getCriterions().get(keyword);
-			selectableLabel = criterion.getSelectableLabel(o);
+			Criterion criterion = (Criterion) filter.getCriterions().get(keyword);
+			selectableLabel = Filter.getSelectableLabel(criterion, o);
 			selectableLabel = abbreviate(selectableLabel);
 		}
 		return selectableLabel;

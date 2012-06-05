@@ -15,15 +15,12 @@
  *******************************************************************************/
 package net.ihe.gazelle.common.filter.criterion;
 
-import net.ihe.gazelle.common.filter.AbstractEntity;
-
 public abstract class AssociationCriterion<E, F> extends AbstractCriterion<E, F> {
 
 	protected String associationPath;
 
-	public AssociationCriterion(AbstractEntity<E> entity, Class<F> selectableClass, String keyword,
-			String associationPath) {
-		super(entity, selectableClass, keyword);
+	public AssociationCriterion(Class<F> selectableClass, String keyword, String associationPath) {
+		super(selectableClass, keyword);
 		this.associationPath = associationPath;
 	}
 

@@ -17,8 +17,8 @@ package net.ihe.gazelle.common.filter;
 
 import net.ihe.gazelle.common.filter.hql.HQLQueryBuilder;
 
-
-public abstract class AbstractEntity<F> {
+@Deprecated
+public abstract class AbstractEntity<F> implements EntityFiltrable<F> {
 
 	private Class<F> entityClass;
 

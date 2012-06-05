@@ -34,22 +34,6 @@ public abstract class HQLSafePath<T> {
 		return new HQLStatisticItem(path);
 	}
 
-	public void isNotEmpty() {
-		queryBuilder.addRestriction(isNotEmptyRestriction());
-	}
-
-	public void isEmpty() {
-		queryBuilder.addRestriction(isEmptyRestriction());
-	}
-
-	public HQLRestriction isNotEmptyRestriction() {
-		return new HQLRestrictionIsNotEmpty(path);
-	}
-
-	public HQLRestriction isEmptyRestriction() {
-		return new HQLRestrictionIsEmpty(path);
-	}
-
 	@SuppressWarnings("unchecked")
 	public List<T> getListDistinct() {
 		return (List<T>) queryBuilder.getListDistinct(path);
