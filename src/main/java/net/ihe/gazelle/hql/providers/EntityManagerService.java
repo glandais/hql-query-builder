@@ -37,7 +37,7 @@ public class EntityManagerService {
 
 	public static EntityManager provideEntityManager() {
 		initProvider();
-		return PROVIDER.providerEntityManager();
+		return PROVIDER.provideEntityManager();
 	}
 
 	private EntityManagerService() {

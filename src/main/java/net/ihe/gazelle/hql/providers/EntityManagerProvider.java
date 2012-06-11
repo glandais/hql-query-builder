@@ -4,7 +4,7 @@ import javax.persistence.EntityManager;
 
 public interface EntityManagerProvider {
 
-	public EntityManager providerEntityManager();
+	public EntityManager provideEntityManager();
 
 	public int getWeight();
 
