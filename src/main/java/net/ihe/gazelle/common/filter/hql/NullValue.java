@@ -1,4 +1,4 @@
-package net.ihe.gazelle.common.filter;
+package net.ihe.gazelle.common.filter.hql;
 
 public class NullValue {
 
