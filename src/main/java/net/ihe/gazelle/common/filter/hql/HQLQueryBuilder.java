@@ -194,7 +194,7 @@ public class HQLQueryBuilder<T> implements HQLQueryBuilderInterface<T> {
 		log.debug("*******************");
 		log.debug(sb.toString());
 		log.debug("*******************");
-		EntityManager entityManager = EntityManagerService.providerEntityManager();
+		EntityManager entityManager = EntityManagerService.provideEntityManager();
 		Query query = entityManager.createQuery(sb.toString());
 		query.setHint("org.hibernate.cacheable", cachable);
 		return query;

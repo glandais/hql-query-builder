@@ -30,7 +30,7 @@ public class HQLQueryBuilderCache {
 
 		this.factory = null;
 
-		EntityManager entityManager = EntityManagerService.providerEntityManager();
+		EntityManager entityManager = EntityManagerService.provideEntityManager();
 		Object delegate = entityManager.getDelegate();
 		if (delegate instanceof Session) {
 			Session session = (Session) delegate;

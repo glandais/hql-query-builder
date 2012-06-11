@@ -27,6 +27,7 @@ import javax.faces.context.FacesContext;
 import javax.faces.convert.Converter;
 import javax.persistence.EntityManager;
 
+import net.ihe.gazelle.EntityManagerService;
 import net.ihe.gazelle.common.filter.action.DatatableStateHolderBean;
 import net.ihe.gazelle.common.filter.criterion.Criterion;
 import net.ihe.gazelle.common.filter.criterion.PropertyCriterion;
@@ -259,10 +260,8 @@ public class Filter<E> implements MapNotifierListener {
 		return possibleValuesCount;
 	}
 
-	protected Session getSession(EntityManager entityManager) {
-		if (entityManager == null) {
-			entityManager = (EntityManager) Component.getInstance("entityManager");
-		}
+	protected Session getSession() {
+		EntityManager entityManager = EntityManagerService.provideEntityManager();
 		if (entityManager != null) {
 			Object delegate = entityManager.getDelegate();
 			if (delegate instanceof Session) {
@@ -296,16 +295,12 @@ public class Filter<E> implements MapNotifierListener {
 		refreshListStatistics = true;
 	}
 
-	public EntityManager provideEntityManage() {
-		return (EntityManager) Component.getInstance("entityManager");
-	}
-
 	@SuppressWarnings("unchecked")
 	private void refreshPossibleValues() {
 		if (refreshPossibleValues || possibleValues == null) {
 			log.debug("refreshing filter possible values");
 
-			EntityManager em = provideEntityManage();
+			EntityManager em = EntityManagerService.provideEntityManager();
 
 			possibleValues = new HashMap<String, List<Object>>();
 
@@ -488,7 +483,8 @@ public class Filter<E> implements MapNotifierListener {
 								Integer id = Integer.parseInt(stringValue);
 								Criterion<E, ?> abstractCriterion = criterions.get(stringKey);
 								Class<?> selectableClass = abstractCriterion.getSelectableClass();
-								realValue = provideEntityManage().find(selectableClass, id);
+								EntityManager entityManager = EntityManagerService.provideEntityManager();
+								realValue = entityManager.find(selectableClass, id);
 							} catch (NumberFormatException e) {
 								realValue = null;
 							}
@@ -573,7 +569,7 @@ public class Filter<E> implements MapNotifierListener {
 			PropertyCriterion propertyCriterion = (PropertyCriterion) criterion;
 			Class realSelectableClass = propertyCriterion.getRealSelectableClass();
 			if (!realSelectableClass.equals(propertyCriterion.getSelectableClass())) {
-				filterValue = propertyCriterion.getRealValue(filterValue, provideEntityManage());
+				filterValue = propertyCriterion.getRealValue(filterValue);
 			}
 		}
 		return filterValue;

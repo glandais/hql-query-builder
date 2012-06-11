@@ -56,7 +56,7 @@ public abstract class PropertyCriterion<E, F> extends AbstractCriterion<E, F> {
 		return realSelectableClass;
 	}
 
-	public Object getRealValue(F filterValue, EntityManager entityManager) {
+	public Object getRealValue(F filterValue) {
 		HQLQueryBuilder<?> builder = new HQLQueryBuilder(getRealSelectableClass());
 		builder.setMaxResults(2);
 		builder.addEq(propertyName, filterValue);

@@ -10,7 +10,6 @@ import javax.el.Expression;
 import javax.el.ValueExpression;
 import javax.faces.FacesException;
 import javax.faces.context.FacesContext;
-import javax.persistence.EntityManager;
 
 import net.ihe.gazelle.common.filter.hql.HQLQueryBuilder;
 
@@ -19,7 +18,6 @@ import org.ajax4jsf.model.ExtendedDataModel;
 import org.ajax4jsf.model.Range;
 import org.ajax4jsf.model.SequenceRange;
 import org.apache.commons.lang.builder.EqualsBuilder;
-import org.jboss.seam.Component;
 import org.richfaces.model.ExtendedFilterField;
 import org.richfaces.model.FilterField;
 import org.richfaces.model.Modifiable;
@@ -281,10 +279,6 @@ public class HibernateDataModel<T> extends ExtendedDataModel implements Modifiab
 	public void resetCache() {
 		this.cachedItems = null;
 		this.cachedRange = null;
-	}
-
-	protected EntityManager getEntityManager() {
-		return (EntityManager) Component.getInstance("entityManager");
 	}
 
 }
