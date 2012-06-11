@@ -124,7 +124,7 @@ public class HibernateDataModel<T> extends ExtendedDataModel implements Modifiab
 
 		if (this.cachedItems == null || !areEqualRanges(this.cachedRange, jpaRange)) {
 
-			HQLQueryBuilder<T> queryBuilder = new HQLQueryBuilder<T>(getEntityManager(), dataClass);
+			HQLQueryBuilder<T> queryBuilder = new HQLQueryBuilder<T>(dataClass);
 
 			appendFilters(facesContext, queryBuilder);
 			appendSorts(facesContext, queryBuilder);
@@ -159,7 +159,7 @@ public class HibernateDataModel<T> extends ExtendedDataModel implements Modifiab
 
 	@Override
 	public int getRowCount() {
-		HQLQueryBuilder<T> queryBuilder = new HQLQueryBuilder<T>(getEntityManager(), dataClass);
+		HQLQueryBuilder<T> queryBuilder = new HQLQueryBuilder<T>(dataClass);
 		appendFilters(FacesContext.getCurrentInstance(), queryBuilder);
 		return queryBuilder.getCount();
 	}

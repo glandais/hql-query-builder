@@ -230,7 +230,7 @@ public class Filter<E> implements MapNotifierListener {
 	}
 
 	public List<Object> getListWithStatisticsItems(HQLStatistic<E> item, int statisticItemIndex) {
-		HQLQueryBuilder<E> queryBuilder = new HQLQueryBuilder<E>(provideEntityManage(), entity.getEntityClass());
+		HQLQueryBuilder<E> queryBuilder = new HQLQueryBuilder<E>(entity.getEntityClass());
 		appendHibernateFilters(queryBuilder);
 		List<Object> listWithStatisticsItems = queryBuilder.getListWithStatisticsItems(statisticItems, item,
 				statisticItemIndex);
@@ -239,7 +239,7 @@ public class Filter<E> implements MapNotifierListener {
 
 	private void refreshListWithStatistics() {
 		if (refreshListStatistics) {
-			HQLQueryBuilder<E> queryBuilder = new HQLQueryBuilder<E>(provideEntityManage(), entity.getEntityClass());
+			HQLQueryBuilder<E> queryBuilder = new HQLQueryBuilder<E>(entity.getEntityClass());
 			appendHibernateFilters(queryBuilder);
 			listWithStatistics = queryBuilder.getListWithStatistics(statisticItems);
 			refreshListStatistics = false;
@@ -319,7 +319,7 @@ public class Filter<E> implements MapNotifierListener {
 					log.debug("refreshing filter possible values for " + keyword);
 
 					@SuppressWarnings("rawtypes")
-					HQLQueryBuilder<?> queryBuilder = new HQLQueryBuilder(em, effectiveFilter.getSelectableClass());
+					HQLQueryBuilder<?> queryBuilder = new HQLQueryBuilder(effectiveFilter.getSelectableClass());
 					List<?> distincts = queryBuilder.getList();
 
 					List<ValueCount> values = new ArrayList<ValueCount>(distincts.size() + 1);
@@ -343,7 +343,7 @@ public class Filter<E> implements MapNotifierListener {
 
 					log.debug("refreshing filter possible values for " + keyword);
 
-					HQLQueryBuilder<E> queryBuilder = new HQLQueryBuilder<E>(em, entity.getEntityClass());
+					HQLQueryBuilder<E> queryBuilder = new HQLQueryBuilder<E>(entity.getEntityClass());
 
 					effectiveFilter.appendDefaultFilter(queryBuilder);
 

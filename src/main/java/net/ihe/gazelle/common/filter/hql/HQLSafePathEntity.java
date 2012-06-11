@@ -10,4 +10,6 @@ public abstract class HQLSafePathEntity<T> extends HQLSafePath<T> {
 		queryBuilder.addFetch(path);
 	}
 
+	public abstract Class<?> getEntityClass();
+
 }

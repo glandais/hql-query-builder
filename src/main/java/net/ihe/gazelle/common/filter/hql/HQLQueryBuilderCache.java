@@ -4,7 +4,13 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
+import javax.persistence.EntityManager;
+
+import net.ihe.gazelle.EntityManagerService;
+
 import org.apache.commons.lang.StringUtils;
+import org.hibernate.Session;
+import org.hibernate.SessionFactory;
 import org.hibernate.engine.SessionFactoryImplementor;
 import org.hibernate.metadata.ClassMetadata;
 import org.hibernate.type.BagType;
@@ -19,9 +25,24 @@ public class HQLQueryBuilderCache {
 	private Map<String, Boolean> isBagTypes;
 	private SessionFactoryImplementor factory;
 
-	public HQLQueryBuilderCache(Class<?> entityClass, SessionFactoryImplementor factory) {
+	public HQLQueryBuilderCache(Class<?> entityClass) {
 		super();
-		this.factory = factory;
+
+		this.factory = null;
+
+		EntityManager entityManager = EntityManagerService.providerEntityManager();
+		Object delegate = entityManager.getDelegate();
+		if (delegate instanceof Session) {
+			Session session = (Session) delegate;
+			SessionFactory sessionFactory = session.getSessionFactory();
+			if (sessionFactory instanceof SessionFactoryImplementor) {
+				factory = (SessionFactoryImplementor) sessionFactory;
+			}
+		}
+		if (factory == null) {
+			throw new IllegalArgumentException();
+		}
+
 		pathToClassMetadata = Collections.synchronizedMap(new HashMap<String, ClassMetadata>());
 		pathToClassMetadata.put("this_", factory.getClassMetadata(entityClass));
 		pathToClass = Collections.synchronizedMap(new HashMap<String, Class<?>>());

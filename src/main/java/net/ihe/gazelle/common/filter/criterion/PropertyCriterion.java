@@ -29,8 +29,7 @@ public abstract class PropertyCriterion<E, F> extends AbstractCriterion<E, F> {
 	protected String propertyName;
 	private Class<?> realSelectableClass;
 
-	public PropertyCriterion(Class<F> selectableClass, String keyword,
-			String associationPath, String propertyName) {
+	public PropertyCriterion(Class<F> selectableClass, String keyword, String associationPath, String propertyName) {
 		super(selectableClass, keyword);
 		this.associationPath = associationPath;
 		this.propertyName = propertyName;
@@ -58,7 +57,7 @@ public abstract class PropertyCriterion<E, F> extends AbstractCriterion<E, F> {
 	}
 
 	public Object getRealValue(F filterValue, EntityManager entityManager) {
-		HQLQueryBuilder<?> builder = new HQLQueryBuilder(entityManager, getRealSelectableClass());
+		HQLQueryBuilder<?> builder = new HQLQueryBuilder(getRealSelectableClass());
 		builder.setMaxResults(2);
 		builder.addEq(propertyName, filterValue);
 		List<?> list = builder.getList();

@@ -14,12 +14,11 @@ import java.util.Set;
 import javax.persistence.EntityManager;
 import javax.persistence.Query;
 
+import net.ihe.gazelle.EntityManagerService;
+
 import org.apache.commons.beanutils.MethodUtils;
 import org.apache.commons.lang.StringUtils;
 import org.hibernate.Criteria;
-import org.hibernate.Session;
-import org.hibernate.SessionFactory;
-import org.hibernate.engine.SessionFactoryImplementor;
 import org.hibernate.metadata.ClassMetadata;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -44,36 +43,21 @@ public class HQLQueryBuilder<T> implements HQLQueryBuilderInterface<T> {
 	private int firstResult = -1;
 	private int maxResults = -1;
 
-	private EntityManager entityManager;
-
 	private boolean leftJoinDone = false;
 
 	private Class<T> entityClass;
 	private boolean cachable = true;
 
-	public HQLQueryBuilder(EntityManager entityManager, Class<T> entityClass) {
+	public HQLQueryBuilder(Class<T> entityClass) {
 		super();
 		this.entityClass = entityClass;
-		SessionFactoryImplementor factory = null;
-		this.entityManager = entityManager;
-		Object delegate = entityManager.getDelegate();
-		if (delegate instanceof Session) {
-			Session session = (Session) delegate;
-			SessionFactory sessionFactory = session.getSessionFactory();
-			if (sessionFactory instanceof SessionFactoryImplementor) {
-				factory = (SessionFactoryImplementor) sessionFactory;
-			}
-		}
-		if (factory == null) {
-			throw new IllegalArgumentException();
-		}
 		String canonicalName = entityClass.getCanonicalName();
 		HQLQueryBuilderCache hqlQueryBuilderCacheTmp = cache.get(canonicalName);
 		if (hqlQueryBuilderCacheTmp == null) {
 			synchronized (HQLQueryBuilder.class) {
 				hqlQueryBuilderCacheTmp = cache.get(canonicalName);
 				if (hqlQueryBuilderCacheTmp == null) {
-					hqlQueryBuilderCacheTmp = new HQLQueryBuilderCache(entityClass, factory);
+					hqlQueryBuilderCacheTmp = new HQLQueryBuilderCache(entityClass);
 					cache.put(canonicalName, hqlQueryBuilderCacheTmp);
 				}
 			}
@@ -96,6 +80,10 @@ public class HQLQueryBuilder<T> implements HQLQueryBuilderInterface<T> {
 	public void addOrder(String propertyName, boolean ascending) {
 		String shortProperty = getShortProperty(propertyName);
 		orders.add(new HQLOrder(shortProperty, ascending));
+	}
+
+	public List<HQLOrder> getOrders() {
+		return orders;
 	}
 
 	public void addRestriction(HQLRestriction restriction) {
@@ -206,6 +194,7 @@ public class HQLQueryBuilder<T> implements HQLQueryBuilderInterface<T> {
 		log.debug("*******************");
 		log.debug(sb.toString());
 		log.debug("*******************");
+		EntityManager entityManager = EntityManagerService.providerEntityManager();
 		Query query = entityManager.createQuery(sb.toString());
 		query.setHint("org.hibernate.cacheable", cachable);
 		return query;

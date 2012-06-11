@@ -4,8 +4,15 @@ import java.util.Collection;
 
 public class HQLSafePathBasic<T> extends HQLSafePath<T> {
 
-	public HQLSafePathBasic(String path, HQLQueryBuilder<?> queryBuilder) {
+	private Class<?> type;
+
+	public HQLSafePathBasic(String path, HQLQueryBuilder<?> queryBuilder, Class<?> type) {
 		super(path, queryBuilder);
+		this.type = type;
+	}
+
+	public Class<?> getType() {
+		return type;
 	}
 
 	public void order(boolean ascending) {
