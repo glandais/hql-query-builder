@@ -1,7 +1,5 @@
 package net.ihe.gazelle.common.filter.hql;
 
-import net.ihe.gazelle.common.filter.NullValue;
-
 public class HQLRestrictionCompare implements HQLRestriction {
 
 	private String path;
