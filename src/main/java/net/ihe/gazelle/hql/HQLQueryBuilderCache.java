@@ -25,13 +25,18 @@ class HQLQueryBuilderCache {
 	private Map<String, Boolean> isBagTypes;
 	private SessionFactoryImplementor factory;
 
-	public HQLQueryBuilderCache(Class<?> entityClass) {
+	public HQLQueryBuilderCache(EntityManager entityManager, Class<?> entityClass) {
 		super();
 
 		this.factory = null;
 
-		EntityManager entityManager = EntityManagerService.provideEntityManager();
-		Object delegate = entityManager.getDelegate();
+		EntityManager entityManagerForFactory;
+		if (entityManager != null) {
+			entityManagerForFactory = entityManager;
+		} else {
+			entityManagerForFactory = EntityManagerService.provideEntityManager();
+		}
+		Object delegate = entityManagerForFactory.getDelegate();
 		if (delegate instanceof Session) {
 			Session session = (Session) delegate;
 			SessionFactory sessionFactory = session.getSessionFactory();

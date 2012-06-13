@@ -76,7 +76,7 @@ public class HQLQueryBuilder<T> implements HQLQueryBuilderInterface<T> {
 			synchronized (HQLQueryBuilder.class) {
 				hqlQueryBuilderCacheTmp = cache.get(canonicalName);
 				if (hqlQueryBuilderCacheTmp == null) {
-					hqlQueryBuilderCacheTmp = new HQLQueryBuilderCache(entityClass);
+					hqlQueryBuilderCacheTmp = new HQLQueryBuilderCache(this.entityManager, entityClass);
 					cache.put(canonicalName, hqlQueryBuilderCacheTmp);
 				}
 			}
