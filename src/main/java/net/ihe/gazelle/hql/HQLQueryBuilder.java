@@ -55,8 +55,20 @@ public class HQLQueryBuilder<T> implements HQLQueryBuilderInterface<T> {
 	private Class<T> entityClass;
 	private boolean cachable = true;
 
+	private EntityManager entityManager = null;
+
 	public HQLQueryBuilder(Class<T> entityClass) {
 		super();
+		init(entityClass);
+	}
+
+	public HQLQueryBuilder(EntityManager entityManager, Class<T> entityClass) {
+		super();
+		this.entityManager = entityManager;
+		init(entityClass);
+	}
+
+	private void init(Class<T> entityClass) {
 		this.entityClass = entityClass;
 		String canonicalName = entityClass.getCanonicalName();
 		HQLQueryBuilderCache hqlQueryBuilderCacheTmp = cache.get(canonicalName);
@@ -201,8 +213,13 @@ public class HQLQueryBuilder<T> implements HQLQueryBuilderInterface<T> {
 		log.debug("*******************");
 		log.debug(sb.toString());
 		log.debug("*******************");
-		EntityManager entityManager = EntityManagerService.provideEntityManager();
-		Query query = entityManager.createQuery(sb.toString());
+		EntityManager entityManagerQuery;
+		if (entityManager != null) {
+			entityManagerQuery = entityManager;
+		} else {
+			entityManagerQuery = EntityManagerService.provideEntityManager();
+		}
+		Query query = entityManagerQuery.createQuery(sb.toString());
 		query.setHint("org.hibernate.cacheable", cachable);
 		return query;
 	}
