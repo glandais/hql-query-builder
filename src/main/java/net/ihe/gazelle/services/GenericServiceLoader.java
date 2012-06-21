@@ -1,12 +1,12 @@
 package net.ihe.gazelle.services;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.ServiceLoader;
-import java.util.TreeSet;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -17,39 +17,59 @@ public class GenericServiceLoader {
 
 	private static final Map<Class<?>, Object> services = Collections.synchronizedMap(new HashMap<Class<?>, Object>());
 
+	private static final Map<Class<?>, Boolean> isComparableService = Collections
+			.synchronizedMap(new HashMap<Class<?>, Boolean>());
+
+	private static final Map<Class<?>, List> servicesList = Collections.synchronizedMap(new HashMap<Class<?>, List>());
+
 	public static final <T> T getService(Class<T> serviceClass) {
 		T result = (T) services.get(serviceClass);
 		if (result == null) {
+			boolean isComparable = isComparable(serviceClass);
+			List serviceList = getServicesList(serviceClass);
+			if (isComparable) {
+				Collections.sort(serviceList);
+			}
+
+			if (serviceList.size() > 0) {
+				result = (T) serviceList.get(0);
+			} else {
+				log.error("Failed to load an implementation for the service " + serviceClass.getCanonicalName() + " !");
+			}
+
+			if (!isComparable) {
+				services.put(serviceClass, result);
+			}
+		}
+		return result;
+	}
+
+	private static <T> List getServicesList(Class<T> serviceClass) {
+		List result = servicesList.get(serviceClass);
+		if (result == null) {
 			synchronized (serviceClass) {
-				result = (T) services.get(serviceClass);
+				result = servicesList.get(serviceClass);
 				if (result == null) {
+					result = new ArrayList();
 					ServiceLoader<T> providers = ServiceLoader.load(serviceClass);
-					if (Arrays.asList(serviceClass.getInterfaces()).contains(Comparable.class)) {
-						TreeSet<T> providerSet = new TreeSet<T>(new Comparator<T>() {
-							@Override
-							public int compare(T o1, T o2) {
-								Comparable c1 = (Comparable) o1;
-								Comparable c2 = (Comparable) o2;
-								return c1.compareTo(c2);
-							}
-						});
-						for (T t : providers) {
-							providerSet.add(t);
-						}
-						if (providerSet.size() > 0) {
-							result = providerSet.first();
-						}
-					} else {
-						if (providers.iterator().hasNext()) {
-							result = providers.iterator().next();
-						}
+					for (T provider : providers) {
+						result.add(provider);
 					}
+					servicesList.put(serviceClass, result);
 				}
-				if (result != null) {
-					services.put(serviceClass, result);
-				} else {
-					log.error("Failed to load an implementation for the service " + serviceClass.getCanonicalName()
-							+ " !");
+			}
+		}
+		return result;
+	}
+
+	private static <T> Boolean isComparable(Class<T> serviceClass) {
+		Boolean result = isComparableService.get(serviceClass);
+		if (result == null) {
+			synchronized (serviceClass) {
+				result = isComparableService.get(serviceClass);
+				if (result == null) {
+					result = Arrays.asList(serviceClass.getInterfaces()).contains(Comparable.class);
+					isComparableService.put(serviceClass, result);
 				}
 			}
 		}
