@@ -1,10 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
 	<parent>
 		<groupId>net.ihe.gazelle.hql</groupId>
 		<artifactId>gazelle-hql</artifactId>
-		<version>1.4-SNAPSHOT</version>
+		<version>1.4</version>
 		<relativePath>../pom.xml</relativePath>
 	</parent>
 	<modelVersion>4.0.0</modelVersion>
@@ -12,8 +11,8 @@
 	<packaging>jar</packaging>
 	<name>gazelle-hql-jar</name>
 	<scm>
-		<connection>scm:svn:svn://scm.gforge.inria.fr/svn/gazelle/Maven/gazelle-hql/trunk/gazelle-hql-jar</connection>
-		<developerConnection>scm:svn:svn+ssh://scm.gforge.inria.fr/svn/gazelle/Maven/gazelle-hql/trunk/gazelle-hql-jar</developerConnection>
+		<connection>scm:svn:svn://scm.gforge.inria.fr/svn/gazelle/Maven/gazelle-hql/tags/gazelle-hql-1.4/gazelle-hql-jar</connection>
+		<developerConnection>scm:svn:svn+ssh://scm.gforge.inria.fr/svn/gazelle/Maven/gazelle-hql/tags/gazelle-hql-1.4/gazelle-hql-jar</developerConnection>
 	</scm>
 	<organization>
 		<name>INRIA (Rennes, France)</name>
