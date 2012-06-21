@@ -3,7 +3,7 @@
 	<parent>
 		<groupId>net.ihe.gazelle.hql</groupId>
 		<artifactId>gazelle-hql</artifactId>
-		<version>1.4</version>
+		<version>1.5-SNAPSHOT</version>
 		<relativePath>../pom.xml</relativePath>
 	</parent>
 	<modelVersion>4.0.0</modelVersion>
@@ -11,8 +11,8 @@
 	<packaging>jar</packaging>
 	<name>gazelle-hql-jar</name>
 	<scm>
-		<connection>scm:svn:svn://scm.gforge.inria.fr/svn/gazelle/Maven/gazelle-hql/tags/gazelle-hql-1.4/gazelle-hql-jar</connection>
-		<developerConnection>scm:svn:svn+ssh://scm.gforge.inria.fr/svn/gazelle/Maven/gazelle-hql/tags/gazelle-hql-1.4/gazelle-hql-jar</developerConnection>
+		<connection>scm:svn:svn://scm.gforge.inria.fr/svn/gazelle/Maven/gazelle-hql/trunk/gazelle-hql-jar</connection>
+		<developerConnection>scm:svn:svn+ssh://scm.gforge.inria.fr/svn/gazelle/Maven/gazelle-hql/trunk/gazelle-hql-jar</developerConnection>
 	</scm>
 	<organization>
 		<name>INRIA (Rennes, France)</name>
