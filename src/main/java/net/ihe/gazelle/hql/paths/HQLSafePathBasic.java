@@ -31,6 +31,10 @@ public class HQLSafePathBasic<T> extends HQLSafePath<T> {
 		queryBuilder.addOrder(path, ascending);
 	}
 
+	public void order(boolean ascending, boolean lowerCase) {
+		queryBuilder.addOrder(path, ascending, lowerCase);
+	}
+
 	public void eq(T value) {
 		queryBuilder.addRestriction(eqRestriction(value));
 	}
