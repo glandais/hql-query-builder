@@ -197,13 +197,7 @@ public class HQLQueryBuilder<T> implements HQLQueryBuilderInterface<T> {
 					sb.append(", ");
 				}
 				sb.append(LINE_FEED);
-				if (order.isLowerCase()) {
-					sb.append("lower(");
-				}
 				sb.append(order.getPath());
-				if (order.isLowerCase()) {
-					sb.append(")");
-				}
 				if (order.isAscending()) {
 					sb.append(" asc");
 				} else {

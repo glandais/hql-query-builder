@@ -21,7 +21,11 @@ public class HQLOrder {
 	}
 
 	public String getPath() {
-		return path;
+		if (lowerCase) {
+			return "lower(" + path + ")";
+		} else {
+			return path;
+		}
 	}
 
 	public boolean isAscending() {
