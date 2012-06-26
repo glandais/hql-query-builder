@@ -1,25 +1,28 @@
 package net.ihe.gazelle.hql.exchange.common;
 
-public interface DataFormatter<R, W> {
+import java.io.InputStream;
+import java.io.OutputStream;
 
-	void readStart(R source);
+public interface DataFormatter {
 
-	Object readValue(String key);
+	void readStart(InputStream source) throws DataException;
 
-	void readStartSubValue(String key);
+	Object readValue(String key) throws DataException;
 
-	void readEndSubValue();
+	void readStartSubValue(String key) throws DataException;
 
-	void readEnd();
+	void readEndSubValue() throws DataException;
 
-	void writeStart();
+	void readEnd() throws DataException;
 
-	void writeValue(String key, Object value);
+	void writeStart(OutputStream outputStream) throws DataException;
 
-	void writeStartSubValue(String key);
+	void writeValue(String key, Object value) throws DataException;
 
-	void writeEndSubValue();
+	void writeStartSubValue(String key) throws DataException;
 
-	W writeEnd();
+	void writeEndSubValue() throws DataException;
+
+	void writeEnd() throws DataException;
 
 }

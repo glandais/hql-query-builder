@@ -1,5 +1,6 @@
 package net.ihe.gazelle.hql.exchange.export;
 
+import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -28,9 +29,9 @@ public class DataExporter {
 		super();
 	}
 
-	public <W> W writeElement(Object element, DataFormatter<?, W> dataFormatter) throws DataException {
+	public void writeElement(Object element, DataFormatter dataFormatter, OutputStream os) throws DataException {
 		try {
-			dataFormatter.writeStart();
+			dataFormatter.writeStart(os);
 
 			MultiKeyMap dictionnary = new MultiKeyMap();
 
@@ -38,7 +39,7 @@ public class DataExporter {
 
 			writeDictionnary(dictionnary, dataFormatter);
 
-			return dataFormatter.writeEnd();
+			dataFormatter.writeEnd();
 		} catch (Exception e) {
 			log.error("Failed to export object", e);
 			throw new DataException(e);
@@ -156,7 +157,7 @@ public class DataExporter {
 		return propertyName;
 	}
 
-	protected void writeDictionnary(MultiKeyMap dictionnary, DataFormatter<?, ?> dataFormatter) {
+	protected void writeDictionnary(MultiKeyMap dictionnary, DataFormatter dataFormatter) throws DataException {
 		Set entrySet = dictionnary.entrySet();
 		for (Object object : entrySet) {
 			Map.Entry entry = (Entry) object;
@@ -169,7 +170,7 @@ public class DataExporter {
 		}
 	}
 
-	protected void writeDictionnaryMultiKey(MultiKey key, DataFormatter<?, ?> dataFormatter) {
+	protected void writeDictionnaryMultiKey(MultiKey key, DataFormatter dataFormatter) throws DataException {
 		Object[] keys = key.getKeys();
 		int i = 0;
 		for (Object object : keys) {
@@ -182,7 +183,8 @@ public class DataExporter {
 		}
 	}
 
-	protected void writeDictionnaryValue(Map<String, Object> valueMap, DataFormatter<?, ?> dataFormatter) {
+	protected void writeDictionnaryValue(Map<String, Object> valueMap, DataFormatter dataFormatter)
+			throws DataException {
 		dataFormatter.writeStartSubValue("value");
 		Set<Entry<String, Object>> entrySet = valueMap.entrySet();
 		for (Entry<String, Object> entry : entrySet) {
@@ -203,15 +205,15 @@ public class DataExporter {
 				int i = 0;
 				for (Object listElement : list) {
 					if (listElement == null) {
-						dataFormatter.writeValue(Integer.toString(i), null);
+						dataFormatter.writeValue("item_" + Integer.toString(i), null);
 					} else {
-						dataFormatter.writeStartSubValue(Integer.toString(i));
+						dataFormatter.writeStartSubValue("item_" + Integer.toString(i));
 						MultiKey multiKey = (MultiKey) listElement;
 						writeDictionnaryMultiKey(multiKey, dataFormatter);
 						dataFormatter.writeEndSubValue();
 					}
+					i++;
 				}
-				i++;
 				dataFormatter.writeEndSubValue();
 			} else {
 				dataFormatter.writeValue(key, value);
