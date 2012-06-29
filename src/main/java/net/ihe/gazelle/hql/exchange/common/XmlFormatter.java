@@ -63,15 +63,15 @@ public class XmlFormatter implements DataFormatter {
 			writer.append(StringUtils.repeat(" ", tags.size() + 1));
 			writer.append("<");
 			writer.append(key);
-			writer.append(">");
 			if (value == null) {
-				writer.append("null");
+				writer.append(" isNull=\"true\" />");
 			} else {
+				writer.append(">");
 				writer.append(StringEscapeUtils.escapeXml(value.toString()));
+				writer.append("</");
+				writer.append(key);
+				writer.append(">");
 			}
-			writer.append("</");
-			writer.append(key);
-			writer.append(">");
 			writer.newLine();
 		} catch (IOException e) {
 			throw new DataException(e);

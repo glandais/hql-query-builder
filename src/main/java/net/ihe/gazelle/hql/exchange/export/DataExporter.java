@@ -4,10 +4,11 @@ import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.Map.Entry;
+import java.util.Set;
 
 import net.ihe.gazelle.hql.exchange.common.DataException;
 import net.ihe.gazelle.hql.exchange.common.DataFormatter;
@@ -18,6 +19,7 @@ import net.ihe.gazelle.hql.paths.HQLSafePathEntity;
 import org.apache.commons.beanutils.PropertyUtils;
 import org.apache.commons.collections.keyvalue.MultiKey;
 import org.apache.commons.collections.map.MultiKeyMap;
+import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -25,21 +27,146 @@ public class DataExporter {
 
 	private static Logger log = LoggerFactory.getLogger(DataExporter.class);
 
-	public DataExporter() {
+	private MultiKeyMap dictionnary;
+	private Map<MultiKey, Integer> internalIds;
+
+	private DataFormatter dataFormatter;
+
+	public DataExporter(DataFormatter dataFormatter, OutputStream os) throws DataException {
 		super();
+		dictionnary = new MultiKeyMap();
+		internalIds = new HashMap<MultiKey, Integer>();
+		this.dataFormatter = dataFormatter;
+		dataFormatter.writeStart(os);
 	}
 
-	public void writeElement(Object element, DataFormatter dataFormatter, OutputStream os) throws DataException {
+	public void explainElement(Object element) throws DataException {
+		HQLSafePathEntity<?> hqlEntity = getHQLEntity(element);
+		explainElement(hqlEntity);
+	}
+
+	public void explainElement(HQLSafePathEntity<?> element) throws DataException {
+		Set<String> paths = new HashSet<String>();
+		System.out.println("***** " + element.getEntityClass().getCanonicalName());
+		explainElement(paths, element);
+	}
+
+	private void explainElement(Set<String> paths, HQLSafePathEntity<?> entity) {
+		String entry = entity.getEntityClass().getCanonicalName() + "." + getPropertyName(entity);
+		paths.add(entry);
+
+		String spaces = StringUtils.repeat(" ", (paths.size() - 1) * 2);
+
+		Set<HQLSafePath<?>> allAttributes = entity.getAllAttributes();
+		Set<HQLSafePath<?>> exportableAttributes = entity.getExportableAttributes();
+
+		for (HQLSafePath<?> hqlSafePath : allAttributes) {
+			boolean exportable = exportableAttributes.contains(hqlSafePath);
+			String prefix;
+			if (exportable) {
+				prefix = "++";
+			} else {
+				prefix = "--";
+			}
+			String propertyName = getPropertyName(hqlSafePath);
+
+			if (hqlSafePath instanceof HQLSafePathBasic) {
+				System.out.println(spaces + prefix + "B  " + propertyName + " - " + hqlSafePath.getPath());
+			} else if (hqlSafePath instanceof HQLSafePathEntity) {
+				HQLSafePathEntity hqlSafePathEntity = (HQLSafePathEntity) hqlSafePath;
+
+				boolean doProcess = true;
+				if (exportable) {
+					String subEntry = hqlSafePathEntity.getEntityClass().getCanonicalName() + "." + propertyName;
+					if (paths.contains(subEntry)) {
+						System.out.println(StringUtils.repeat("*", (paths.size() - 1) * 2) + "***  " + propertyName
+								+ " - Path already done! - " + hqlSafePathEntity.getPath());
+						doProcess = false;
+					}
+				}
+
+				if (doProcess) {
+					String label = prefix + "E";
+					if (hqlSafePathEntity.isSingle()) {
+						label = label + "  ";
+					} else {
+						label = label + "* ";
+					}
+					System.out.println(spaces + label + propertyName + " - " + hqlSafePathEntity.getPath());
+					if (exportable) {
+						explainElement(paths, hqlSafePathEntity);
+					}
+				}
+
+			}
+		}
+
+		paths.remove(entry);
+	}
+
+	/*
+	private boolean explainElement(Set<String> paths, HQLSafePathEntity<?> entity, boolean test) {
+		String spaces = StringUtils.repeat(" ", (paths.size() - 1) * 2);
+
+		if (test) {
+			String entry = entity.getEntityClass().getCanonicalName() + "." + getPropertyName(entity);
+			paths.add(entry);
+			if (paths.contains(entry)) {
+				System.out.println(StringUtils.repeat("*", (paths.size() - 1) * 2) + "Path already done! " + entry);
+				return false;
+			}
+			return true;
+		}
+
+		Set<HQLSafePath<?>> allAttributes = entity.getAllAttributes();
+		Set<HQLSafePath<?>> exportableAttributes = entity.getExportableAttributes();
+
+		for (HQLSafePath<?> hqlSafePath : exportableAttributes) {
+			if (hqlSafePath instanceof HQLSafePathEntity) {
+				if (!explainElement(paths, entity, true)) {
+
+				}
+			}
+		}
+
+		for (HQLSafePath<?> hqlSafePath : allAttributes) {
+			String propertyName = getPropertyName(hqlSafePath);
+
+			String prefix;
+			boolean exportable = true;
+			if (exportableAttributes.contains(hqlSafePath)) {
+				prefix = "++";
+			} else {
+				prefix = "--";
+				exportable = false;
+			}
+
+			if (hqlSafePath instanceof HQLSafePathBasic) {
+				System.out.println(spaces + prefix + "B  " + propertyName + " - " + hqlSafePath.getPath());
+			} else if (hqlSafePath instanceof HQLSafePathEntity) {
+
+				HQLSafePathEntity hqlSafePathEntity = (HQLSafePathEntity) hqlSafePath;
+
+				String label = prefix + "E";
+				if (hqlSafePathEntity.isSingle()) {
+					label = label + "  ";
+				} else {
+					label = label + "* ";
+				}
+				System.out.println(spaces + label + propertyName + " - " + hqlSafePathEntity.getPath());
+				if (exportable) {
+					explainElement(paths, hqlSafePathEntity, false);
+				}
+			}
+
+		}
+		paths.remove(entry);
+	}
+	*/
+
+	public void writeElement(Object element) throws DataException {
 		try {
-			MultiKeyMap dictionnary = new MultiKeyMap();
-			Map<MultiKey, Integer> internalIds = new HashMap<MultiKey, Integer>();
-
-			write(element, dictionnary, internalIds);
-
-			dataFormatter.writeStart(os);
-			writeDictionnary(dictionnary, internalIds, dataFormatter);
-			dataFormatter.writeEnd();
-
+			write("this", element);
 		} catch (DataException e) {
 			throw e;
 		} catch (Exception e) {
@@ -48,8 +175,21 @@ public class DataExporter {
 		}
 	}
 
-	private Integer write(Object element, MultiKeyMap dictionnary, Map<MultiKey, Integer> internalIds)
-			throws DataException {
+	public void close() throws DataException {
+		Set entrySet = dictionnary.entrySet();
+		for (Object object : entrySet) {
+			Map.Entry entry = (Entry) object;
+			MultiKey key = (MultiKey) entry.getKey();
+			String className = (String) key.getKey(0);
+			Integer internalId = internalIds.get(key);
+			Map<String, Object> value = (Map<String, Object>) entry.getValue();
+			writeDictionnaryEntry(className, internalId, value);
+		}
+		dataFormatter.writeEnd();
+	}
+
+	private Integer write(String path, Object element) throws DataException {
+		System.out.println(path + " - " + element);
 		HQLSafePathEntity<?> hqlEntity = getHQLEntity(element);
 
 		// Lookup for unique attributes
@@ -68,7 +208,7 @@ public class DataExporter {
 			if (hqlSafePath instanceof HQLSafePathBasic) {
 				values[i] = value;
 			} else {
-				values[i] = write(value, dictionnary, internalIds);
+				values[i] = write(path + "." + propertyName, value);
 			}
 			i++;
 		}
@@ -77,20 +217,19 @@ public class DataExporter {
 		if (!dictionnary.containsKey(key)) {
 			dictionnary.put(key, null);
 			internalIds.put(key, new Integer(internalIds.size() + 1));
-			Map<String, Object> dictionnaryValues = writeAddToDictionnary(dictionnary, internalIds, hqlEntity);
+			Map<String, Object> dictionnaryValues = writeAddToDictionnary(path, hqlEntity);
 			dictionnary.put(key, dictionnaryValues);
 		}
 		return internalIds.get(key);
 	}
 
-	protected Map<String, Object> writeAddToDictionnary(MultiKeyMap dictionnary, Map<MultiKey, Integer> internalIds,
-			HQLSafePathEntity<?> hqlEntity) throws DataException {
+	protected Map<String, Object> writeAddToDictionnary(String path, HQLSafePathEntity<?> hqlEntity)
+			throws DataException {
 		Map<String, Object> values = new HashMap<String, Object>();
 
 		Object uniqueResult = hqlEntity.getQueryBuilder().getUniqueResult();
-		Set<HQLSafePath<?>> allAttributes = hqlEntity.getAllAttributes();
-		Set<HQLSafePath<?>> notExportedAttributes = hqlEntity.getNotExportedAttributes();
-		allAttributes.removeAll(notExportedAttributes);
+
+		Set<HQLSafePath<?>> allAttributes = hqlEntity.getExportableAttributes();
 
 		for (HQLSafePath attribute : allAttributes) {
 			Object value = null;
@@ -108,7 +247,7 @@ public class DataExporter {
 					if (object == null) {
 						value = null;
 					} else {
-						value = write(object, dictionnary, internalIds);
+						value = write(path + "." + propertyName, object);
 					}
 
 				} else {
@@ -121,7 +260,7 @@ public class DataExporter {
 							if (object == null) {
 								childValue = null;
 							} else {
-								childValue = write(object, dictionnary, internalIds);
+								childValue = write(path + "." + propertyName, object);
 							}
 							children.add(childValue);
 						}
@@ -174,21 +313,8 @@ public class DataExporter {
 		return safePathEntity;
 	}
 
-	private void writeDictionnary(MultiKeyMap dictionnary, Map<MultiKey, Integer> internalIds,
-			DataFormatter dataFormatter) throws DataException {
-		Set entrySet = dictionnary.entrySet();
-		for (Object object : entrySet) {
-			Map.Entry entry = (Entry) object;
-			MultiKey key = (MultiKey) entry.getKey();
-			String className = (String) key.getKey(0);
-			Integer internalId = internalIds.get(key);
-			Map<String, Object> value = (Map<String, Object>) entry.getValue();
-			writeDictionnaryEntry(className, internalId, value, dataFormatter);
-		}
-	}
-
-	private void writeDictionnaryEntry(String className, Integer internalId, Map<String, Object> value,
-			DataFormatter dataFormatter) throws DataException {
+	private void writeDictionnaryEntry(String className, Integer internalId, Map<String, Object> value)
+			throws DataException {
 		dataFormatter.writeStartSubValue("entry");
 
 		dataFormatter.writeValue("class", className);
@@ -197,14 +323,14 @@ public class DataExporter {
 		dataFormatter.writeStartSubValue("value");
 		Set<Entry<String, Object>> entries = value.entrySet();
 		for (Entry<String, Object> entry : entries) {
-			writeDictionnaryObject(entry.getKey(), entry.getValue(), dataFormatter);
+			writeDictionnaryObject(entry.getKey(), entry.getValue());
 		}
 		dataFormatter.writeEndSubValue();
 
 		dataFormatter.writeEndSubValue();
 	}
 
-	private void writeDictionnaryObject(String key, Object value, DataFormatter dataFormatter) throws DataException {
+	private void writeDictionnaryObject(String key, Object value) throws DataException {
 		if (value instanceof List) {
 			dataFormatter.writeStartSubValue(key);
 			List<?> list = (List<?>) value;

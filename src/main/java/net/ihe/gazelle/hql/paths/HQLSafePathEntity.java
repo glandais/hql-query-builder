@@ -72,4 +72,11 @@ public abstract class HQLSafePathEntity<T> extends HQLSafePath<T> {
 		return uniqueAttributes;
 	}
 
+	public Set<HQLSafePath<?>> getExportableAttributes() {
+		Set<HQLSafePath<?>> allAttributes = getAllAttributes();
+		Set<HQLSafePath<?>> notExportedAttributes = getNotExportedAttributes();
+		allAttributes.removeAll(notExportedAttributes);
+		return allAttributes;
+	}
+
 }
