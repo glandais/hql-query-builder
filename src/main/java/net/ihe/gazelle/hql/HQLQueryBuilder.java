@@ -84,6 +84,10 @@ public class HQLQueryBuilder<T> implements HQLQueryBuilderInterface<T> {
 		this.hqlQueryBuilderCache = hqlQueryBuilderCacheTmp;
 	}
 
+	public Class<T> getEntityClass() {
+		return entityClass;
+	}
+
 	public void addEq(String propertyName, Object value) {
 		restrictions.add(HQLRestrictions.eq(propertyName, value));
 	}

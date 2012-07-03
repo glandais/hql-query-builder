@@ -33,7 +33,9 @@ public abstract class AbstractEntityManagerProvider implements EntityManagerProv
 		if (em != null) {
 			return em;
 		} else {
-			return getEntityManagerFactory().createEntityManager();
+			em = getEntityManagerFactory().createEntityManager();
+			HibernateActionPerformer.ENTITYMANGER_THREADLOCAL.set(em);
+			return em;
 		}
 	}
 
