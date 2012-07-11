@@ -76,12 +76,23 @@ public class HQLQueryBuilder<T> implements HQLQueryBuilderInterface<T> {
 			synchronized (HQLQueryBuilder.class) {
 				hqlQueryBuilderCacheTmp = cache.get(canonicalName);
 				if (hqlQueryBuilderCacheTmp == null) {
-					hqlQueryBuilderCacheTmp = new HQLQueryBuilderCache(this.entityManager, entityClass);
+					EntityManager entityManagerQuery = retrieveEntityManager();
+					hqlQueryBuilderCacheTmp = new HQLQueryBuilderCache(entityManagerQuery, entityClass);
 					cache.put(canonicalName, hqlQueryBuilderCacheTmp);
 				}
 			}
 		}
 		this.hqlQueryBuilderCache = hqlQueryBuilderCacheTmp;
+	}
+
+	private EntityManager retrieveEntityManager() {
+		EntityManager entityManagerQuery;
+		if (entityManager != null) {
+			entityManagerQuery = entityManager;
+		} else {
+			entityManagerQuery = EntityManagerService.provideEntityManager();
+		}
+		return entityManagerQuery;
 	}
 
 	public Class<T> getEntityClass() {
@@ -222,12 +233,7 @@ public class HQLQueryBuilder<T> implements HQLQueryBuilderInterface<T> {
 		log.debug("*******************");
 		log.debug(sb.toString());
 		log.debug("*******************");
-		EntityManager entityManagerQuery;
-		if (entityManager != null) {
-			entityManagerQuery = entityManager;
-		} else {
-			entityManagerQuery = EntityManagerService.provideEntityManager();
-		}
+		EntityManager entityManagerQuery = retrieveEntityManager();
 		Query query = entityManagerQuery.createQuery(sb.toString());
 		query.setHint("org.hibernate.cacheable", cachable);
 		return query;
