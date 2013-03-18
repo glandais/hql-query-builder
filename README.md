@@ -1,0 +1,4 @@
+gazelle-hql
+===========
+
+HQL library
