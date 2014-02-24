@@ -1,4 +1,36 @@
 
+	public CLASSNAME(EntityManager entityManager) {
+		super("this", new HQLQueryBuilder(entityManager, TYPE.class));
+	}
+
+	public CLASSNAME(HQLQueryBuilder<?> queryBuilder) {
+		super("this", queryBuilder);
+	}
+
+	public CLASSNAME(String path, HQLQueryBuilder<?> queryBuilder) {
+		super(path, queryBuilder);
+	}
+
+	public Class<?> getEntityClass() {
+		return TYPE.class;
+	}
+
+	public void isNotEmpty() {
+		queryBuilder.addRestriction(isNotEmptyRestriction());
+	}
+
+	public void isEmpty() {
+		queryBuilder.addRestriction(isEmptyRestriction());
+	}
+
+	public HQLRestriction isNotEmptyRestriction() {
+		return HQLRestrictions.isNotEmpty(path);
+	}
+
+	public HQLRestriction isEmptyRestriction() {
+		return HQLRestrictions.isEmpty(path);
+	}
+
 	@SuppressWarnings("unchecked")
 	public List<T> getListDistinct() {
 		return (List<T>) queryBuilder.getListDistinct(path);

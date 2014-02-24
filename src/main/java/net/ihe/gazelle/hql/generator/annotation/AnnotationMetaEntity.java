@@ -19,7 +19,9 @@ package net.ihe.gazelle.hql.generator.annotation;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -33,12 +35,10 @@ import javax.lang.model.element.Modifier;
 import javax.lang.model.element.Name;
 import javax.lang.model.element.PackageElement;
 import javax.lang.model.element.TypeElement;
-import javax.lang.model.type.DeclaredType;
 import javax.lang.model.util.ElementFilter;
 import javax.persistence.Entity;
 import javax.persistence.Table;
 import javax.persistence.UniqueConstraint;
-import javax.tools.Diagnostic.Kind;
 
 import net.ihe.gazelle.hql.generator.Context;
 import net.ihe.gazelle.hql.generator.ImportContextImpl;
@@ -60,14 +60,14 @@ import net.ihe.gazelle.hql.generator.util.TypeUtils;
  */
 public class AnnotationMetaEntity implements MetaEntity {
 
+	private static Set<String> WRONG_UNIQUE = Collections.synchronizedSet(new HashSet<String>());
+
 	private final ImportContext importContext;
 	private final TypeElement element;
 	private final Map<String, MetaAttribute> members;
 	private Context context;
 
 	private AccessTypeInformation entityAccessTypeInfo;
-	private List<String> uniqueColumnNames = null;
-	private List<String> idColumnNames = null;
 	private String dbSynchronizedSet = null;
 
 	public AnnotationMetaEntity(TypeElement element, Context context) {
@@ -82,14 +82,6 @@ public class AnnotationMetaEntity implements MetaEntity {
 		if (!lazilyInitialised) {
 			init();
 		}
-	}
-
-	public List<String> getUniqueColumnNames() {
-		return uniqueColumnNames;
-	}
-
-	public List<String> getIdColumnNames() {
-		return idColumnNames;
 	}
 
 	public String getDbSynchronizedSet() {
@@ -168,8 +160,7 @@ public class AnnotationMetaEntity implements MetaEntity {
 	}
 
 	protected final void init() {
-		uniqueColumnNames = new ArrayList<String>();
-		idColumnNames = new ArrayList<String>();
+		List<List<String>> uniqueColumnNames = new ArrayList<List<String>>();
 
 		List<? extends AnnotationMirror> annotationMirrors = element.getAnnotationMirrors();
 		for (AnnotationMirror annotationMirror : annotationMirrors) {
@@ -186,23 +177,27 @@ public class AnnotationMetaEntity implements MetaEntity {
 			}
 		}
 
+		boolean hasUniqueConstraintsOnTable = false;
+		boolean hasUniqueConstraintsOnColumn = false;
+
 		Entity entity = element.getAnnotation(Entity.class);
 		if (entity != null) {
 			Table table = element.getAnnotation(Table.class);
 			if (table != null) {
 				UniqueConstraint[] uniqueConstraints = table.uniqueConstraints();
 				if (uniqueConstraints != null) {
-					if (uniqueConstraints.length > 1) {
-						context.logMessage(Kind.WARNING, getQualifiedName() + " contains several UniqueConstraint !!!");
-					}
 					for (UniqueConstraint uniqueConstraint : uniqueConstraints) {
+						hasUniqueConstraintsOnTable = true;
 						String[] columnNames = uniqueConstraint.columnNames();
 						if (columnNames != null) {
-							uniqueColumnNames.addAll(Arrays.asList(columnNames));
+							uniqueColumnNames.add(Arrays.asList(columnNames));
 						}
 					}
 				}
 			}
+		}
+		if (uniqueColumnNames.size() > 1) {
+			System.out.println(getQualifiedName());
 		}
 
 		TypeUtils.determineAccessTypeForHierarchy(element, context);
@@ -214,27 +209,51 @@ public class AnnotationMetaEntity implements MetaEntity {
 		List<? extends Element> methodsOfClass = ElementFilter.methodsIn(element.getEnclosedElements());
 		addPersistentMembers(methodsOfClass, AccessType.PROPERTY);
 
+		int uniqueSet = 0;
+
 		Set<Entry<String, MetaAttribute>> entrySet = members.entrySet();
 		for (Entry<String, MetaAttribute> entry : entrySet) {
 			if (entry.getValue() instanceof MetaSingleAttribute) {
 				MetaSingleAttribute metaSingleAttribute = (MetaSingleAttribute) entry.getValue();
+
 				if (metaSingleAttribute.isUnique()) {
-					if (!uniqueColumnNames.contains(metaSingleAttribute.getColumnName())) {
-						uniqueColumnNames.add(metaSingleAttribute.getColumnName());
+					hasUniqueConstraintsOnColumn = true;
+				}
+
+				if (hasUniqueConstraintsOnTable) {
+
+					metaSingleAttribute.setUniqueSet(-1);
+					for (int i = 0; i < uniqueColumnNames.size(); i++) {
+						for (String uniqueColumnName : uniqueColumnNames.get(i)) {
+							if (uniqueColumnName.equals(metaSingleAttribute.getColumnName())) {
+								metaSingleAttribute.setUnique(true);
+								metaSingleAttribute.setUniqueSet(i);
+							}
+						}
+					}
+
+					if (metaSingleAttribute.getUniqueSet() == -1) {
+						// Override column uniqueness as it is ignored by Hibernate!
+						metaSingleAttribute.setUnique(false);
+						metaSingleAttribute.setUniqueSet(0);
+					}
+				} else {
+					if (metaSingleAttribute.isUnique()) {
+						metaSingleAttribute.setUniqueSet(uniqueSet);
+						uniqueSet++;
 					}
 				}
-				if (metaSingleAttribute.isId()) {
-					if (!idColumnNames.contains(metaSingleAttribute.getColumnName())) {
-						idColumnNames.add(metaSingleAttribute.getColumnName());
-					}
-				}
+
 			}
 		}
-		if (uniqueColumnNames.size() == 0) {
-			uniqueColumnNames = null;
-		}
-		if (idColumnNames.size() == 0) {
-			idColumnNames = null;
+
+		if (hasUniqueConstraintsOnTable && hasUniqueConstraintsOnColumn) {
+			if (!WRONG_UNIQUE.contains(getQualifiedName())) {
+				WRONG_UNIQUE.add(getQualifiedName());
+				// context.logMessage(Kind.WARNING, getQualifiedName()
+				// +
+				// " contains uniqueConstraints in @Table AND unique = true on @Column/@JoinColumn");
+			}
 		}
 	}
 

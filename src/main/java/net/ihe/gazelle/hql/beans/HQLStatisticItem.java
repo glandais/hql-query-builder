@@ -1,8 +1,10 @@
 package net.ihe.gazelle.hql.beans;
 
+import java.io.Serializable;
+
 import net.ihe.gazelle.hql.HQLRestriction;
 
-public class HQLStatisticItem {
+public class HQLStatisticItem implements Serializable {
 
 	private String path;
 

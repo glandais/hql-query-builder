@@ -17,6 +17,7 @@
 package net.ihe.gazelle.hql.generator.annotation;
 
 import java.util.List;
+
 import javax.lang.model.element.TypeElement;
 import javax.tools.Diagnostic;
 

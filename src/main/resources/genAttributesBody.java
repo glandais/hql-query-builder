@@ -3,10 +3,6 @@
 		return TYPE.class;
 	}
 
-	public boolean isSingle() {
-		return false;
-	}
-
 	public void isNotEmpty() {
 		queryBuilder.addRestriction(isNotEmptyRestriction());
 	}

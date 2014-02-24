@@ -30,5 +30,4 @@ public interface MetaAttribute {
 
 	MetaEntity getHostingEntity();
 
-	boolean isNotExported();
 }

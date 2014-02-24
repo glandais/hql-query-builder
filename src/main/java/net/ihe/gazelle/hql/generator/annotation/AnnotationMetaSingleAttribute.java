@@ -29,14 +29,16 @@ import net.ihe.gazelle.hql.generator.model.MetaSingleAttribute;
  * @author Hardy Ferentschik
  * @author Emmanuel Bernard
  */
-public class AnnotationMetaSingleAttribute extends AnnotationMetaAttribute implements MetaSingleAttribute {
+public class AnnotationMetaSingleAttribute extends AnnotationMetaAttribute
+		implements MetaSingleAttribute {
 
 	private String columnName = null;
 	private boolean isUnique = false;
+	private int uniqueSet = 0;
 	private boolean isId = false;
 
-	public AnnotationMetaSingleAttribute(AnnotationMetaEntity parent, Element element, String type,
-			AttributeType attributeType) {
+	public AnnotationMetaSingleAttribute(AnnotationMetaEntity parent,
+			Element element, String type, AttributeType attributeType) {
 		super(parent, element, type, attributeType);
 
 		Id id = element.getAnnotation(Id.class);
@@ -49,7 +51,6 @@ public class AnnotationMetaSingleAttribute extends AnnotationMetaAttribute imple
 				isId = true;
 			}
 		}
-
 		Column column = element.getAnnotation(Column.class);
 		isUnique = false;
 
@@ -67,15 +68,27 @@ public class AnnotationMetaSingleAttribute extends AnnotationMetaAttribute imple
 				}
 			}
 		}
+
 	}
 
 	public String getColumnName() {
 		return columnName;
 	}
 
-	@Override
 	public boolean isUnique() {
 		return isUnique;
+	}
+
+	public void setUnique(boolean isUnique) {
+		this.isUnique = isUnique;
+	}
+
+	public int getUniqueSet() {
+		return uniqueSet;
+	}
+
+	public void setUniqueSet(int uniqueSet) {
+		this.uniqueSet = uniqueSet;
 	}
 
 	public boolean isId() {

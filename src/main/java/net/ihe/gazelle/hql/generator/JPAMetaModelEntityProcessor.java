@@ -101,6 +101,9 @@ public class JPAMetaModelEntityProcessor extends AbstractProcessor {
 			return ALLOW_OTHER_PROCESSORS_TO_CLAIM_ANNOTATIONS;
 		}
 
+		System.out.println(JPAMetaModelEntityProcessor.class.getCanonicalName() + " processor");
+		System.out.println("Generating HQL entities using JPA annotations");
+
 		Set<? extends Element> elements = roundEnvironment.getRootElements();
 		for (Element element : elements) {
 			if (isJPAEntity(element)) {

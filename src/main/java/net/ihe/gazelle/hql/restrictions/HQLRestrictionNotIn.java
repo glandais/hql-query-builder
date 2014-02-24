@@ -33,15 +33,12 @@ public class HQLRestrictionNotIn implements HQLRestriction {
 	}
 
 	@Override
-	public void toHQL(HQLQueryBuilder<?> queryBuilder,
-			HQLRestrictionValues values, StringBuilder sb) {
+	public void toHQL(HQLQueryBuilder<?> queryBuilder, HQLRestrictionValues values, StringBuilder sb) {
 		if (elements.isEmpty()) {
-			sb.append(queryBuilder.getShortProperty(path)).append(
-					" is not null");
+			sb.append(queryBuilder.getShortProperty(path)).append(" is not null");
 		} else {
 			sb.append(queryBuilder.getShortProperty(path));
-			sb.append(" not in (:").append(values.addValue(path, elements))
-					.append(")");
+			sb.append(" not in (:").append(values.addValue(path, elements)).append(")");
 		}
 	}
 

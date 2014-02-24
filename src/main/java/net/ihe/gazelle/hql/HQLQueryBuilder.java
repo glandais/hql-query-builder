@@ -1,6 +1,5 @@
 package net.ihe.gazelle.hql;
 
-import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -24,7 +23,6 @@ import net.ihe.gazelle.hql.beans.HQLRestrictionValues;
 import net.ihe.gazelle.hql.beans.HQLStatistic;
 import net.ihe.gazelle.hql.beans.HQLStatisticItem;
 import net.ihe.gazelle.hql.paths.HQLSafePath;
-import net.ihe.gazelle.hql.providers.EntityManagerService;
 import net.ihe.gazelle.hql.restrictions.HQLRestrictions;
 
 import org.apache.commons.lang.StringUtils;
@@ -58,10 +56,7 @@ public class HQLQueryBuilder<T> implements HQLQueryBuilderInterface<T> {
 
 	private EntityManager entityManager = null;
 
-	public HQLQueryBuilder(Class<T> entityClass) {
-		super();
-		init(entityClass);
-	}
+	private boolean computeListUsingIdSubQuery;
 
 	public HQLQueryBuilder(EntityManager entityManager, Class<T> entityClass) {
 		super();
@@ -77,9 +72,7 @@ public class HQLQueryBuilder<T> implements HQLQueryBuilderInterface<T> {
 			synchronized (HQLQueryBuilder.class) {
 				hqlQueryBuilderCacheTmp = cache.get(canonicalName);
 				if (hqlQueryBuilderCacheTmp == null) {
-					EntityManager entityManagerQuery = retrieveEntityManager();
-					hqlQueryBuilderCacheTmp = new HQLQueryBuilderCache(
-							entityManagerQuery, entityClass);
+					hqlQueryBuilderCacheTmp = new HQLQueryBuilderCache(entityManager, entityClass);
 					cache.put(canonicalName, hqlQueryBuilderCacheTmp);
 				}
 			}
@@ -87,18 +80,16 @@ public class HQLQueryBuilder<T> implements HQLQueryBuilderInterface<T> {
 		this.hqlQueryBuilderCache = hqlQueryBuilderCacheTmp;
 	}
 
-	private EntityManager retrieveEntityManager() {
-		EntityManager entityManagerQuery;
-		if (entityManager != null) {
-			entityManagerQuery = entityManager;
-		} else {
-			entityManagerQuery = EntityManagerService.provideEntityManager();
-		}
-		return entityManagerQuery;
-	}
-
 	public Class<T> getEntityClass() {
 		return entityClass;
+	}
+
+	public boolean isComputeListUsingIdSubQuery() {
+		return computeListUsingIdSubQuery;
+	}
+
+	public void setComputeListUsingIdSubQuery(boolean computeListUsingIdSubQuery) {
+		this.computeListUsingIdSubQuery = computeListUsingIdSubQuery;
 	}
 
 	public void addEq(String propertyName, Object value) {
@@ -118,8 +109,7 @@ public class HQLQueryBuilder<T> implements HQLQueryBuilderInterface<T> {
 		orders.add(new HQLOrder(shortProperty, ascending));
 	}
 
-	public void addOrder(String propertyName, boolean ascending,
-			boolean lowerCase) {
+	public void addOrder(String propertyName, boolean ascending, boolean lowerCase) {
 		String shortProperty = getShortProperty(propertyName);
 		orders.add(new HQLOrder(shortProperty, ascending, lowerCase));
 	}
@@ -161,8 +151,7 @@ public class HQLQueryBuilder<T> implements HQLQueryBuilderInterface<T> {
 			String parentPath = path.substring(0, path.lastIndexOf('.'));
 			HQLAlias parentAlias = aliases.get(parentPath);
 			if (parentAlias != null) {
-				path = StringUtils.replaceOnce(path, parentPath,
-						parentAlias.getAlias());
+				path = StringUtils.replaceOnce(path, parentPath, parentAlias.getAlias());
 			}
 
 			sb.append(path);
@@ -178,8 +167,7 @@ public class HQLQueryBuilder<T> implements HQLQueryBuilderInterface<T> {
 		return buildQueryWhere(sb, restrictions);
 	}
 
-	private HQLRestrictionValues buildQueryWhere(StringBuilder sb,
-			List<HQLRestriction> restrictions_) {
+	private HQLRestrictionValues buildQueryWhere(StringBuilder sb, List<HQLRestriction> restrictions_) {
 		HQLRestrictionValues values = new HQLRestrictionValues();
 		if (restrictions_.size() > 0) {
 			sb.append(LINE_FEED);
@@ -227,8 +215,7 @@ public class HQLQueryBuilder<T> implements HQLQueryBuilderInterface<T> {
 		}
 	}
 
-	protected void buildQueryWhereParameters(Query query,
-			HQLRestrictionValues values) {
+	protected void buildQueryWhereParameters(Query query, HQLRestrictionValues values) {
 		Set<Entry<String, Object>> entrySet = values.entrySet();
 		for (Entry<String, Object> entry : entrySet) {
 			query.setParameter(entry.getKey(), entry.getValue());
@@ -239,8 +226,7 @@ public class HQLQueryBuilder<T> implements HQLQueryBuilderInterface<T> {
 		log.debug("*******************");
 		log.debug(sb.toString());
 		log.debug("*******************");
-		EntityManager entityManagerQuery = retrieveEntityManager();
-		Query query = entityManagerQuery.createQuery(sb.toString());
+		Query query = entityManager.createQuery(sb.toString());
 		query.setHint("org.hibernate.cacheable", cachable);
 		return query;
 	}
@@ -278,8 +264,27 @@ public class HQLQueryBuilder<T> implements HQLQueryBuilderInterface<T> {
 	 */
 	@Override
 	public int getCount() {
+		return getCountGeneric("distinct this_");
+	}
+
+	public List<?> getListDistinct(String path) {
+		StringBuilder sb = new StringBuilder("select distinct ").append(getShortProperty(path));
+		return getListWithProvidedFrom(sb, false);
+	}
+
+	public int getCountOnPath(String path) {
+		String propertyPath = getShortProperty(path);
+		return getCountGeneric(propertyPath);
+	}
+
+	public int getCountDistinctOnPath(String path) {
+		String propertyPath = "distinct " + getShortProperty(path);
+		return getCountGeneric(propertyPath);
+	}
+
+	private int getCountGeneric(String propertyPath) {
 		StringBuilder sb = new StringBuilder("select ");
-		sb.append("count(distinct this_)");
+		sb.append("count(").append(propertyPath).append(")");
 
 		// First build where, to get all paths in from
 		StringBuilder sbWhere = new StringBuilder();
@@ -295,19 +300,61 @@ public class HQLQueryBuilder<T> implements HQLQueryBuilderInterface<T> {
 		return count.intValue();
 	}
 
-	public List<?> getListDistinct(String path) {
-		StringBuilder sb = new StringBuilder("select distinct ")
-				.append(getShortProperty(path));
-		return getListWithProvidedFrom(sb);
-	}
-
 	/**
 	 * {@inheritDoc}
 	 */
 	@Override
 	public List<T> getList() {
+		if (computeListUsingIdSubQuery) {
+			return getListUsingIdSubQuery();
+		} else {
+			return getListClassic();
+		}
+	}
+
+	private List<T> getListClassic() {
 		StringBuilder sb = new StringBuilder("select distinct this_");
 		return getListWithProvidedFrom(sb);
+	}
+
+	private List<T> getListUsingIdSubQuery() {
+		StringBuilder sb = new StringBuilder("select distinct this_.id");
+		List<T> listIds = getListWithProvidedFrom(sb);
+
+		sb = new StringBuilder("select distinct this_");
+		// First build where, to get all paths in from
+		StringBuilder sbWhere = new StringBuilder();
+
+		List<HQLRestriction> idRestrictions = new ArrayList<HQLRestriction>(1);
+		idRestrictions.add(HQLRestrictions.in("id", listIds));
+		HQLRestrictionValues values = buildQueryWhere(sbWhere, idRestrictions);
+
+		// Build order, to get all paths in from
+		buildQueryOrder(sbWhere);
+
+		// add order columns if needed, cannot sort without it!
+		// will be removed at the end (result list will be Object[] then)
+		for (HQLOrder order : orders) {
+			sb.append(", ").append(order.getPath());
+		}
+		sb.append(buildQueryFrom());
+		sb.append(sbWhere);
+
+		Query query = createRealQuery(sb);
+
+		buildQueryWhereParameters(query, values);
+
+		List resultList = query.getResultList();
+
+		List finalResult = resultList;
+		if (orders.size() > 0) {
+			finalResult = new ArrayList(resultList.size());
+			for (Object object : resultList) {
+				Object[] row = (Object[]) object;
+				finalResult.add(row[0]);
+			}
+		}
+		return finalResult;
 	}
 
 	@Override
@@ -320,19 +367,26 @@ public class HQLQueryBuilder<T> implements HQLQueryBuilderInterface<T> {
 		}
 	}
 
+	public List<T> getListWithProvidedFrom(StringBuilder sb) {
+		return getListWithProvidedFrom(sb, true);
+	}
+
 	@SuppressWarnings({ "unchecked", "rawtypes" })
-	protected List<T> getListWithProvidedFrom(StringBuilder sb) {
+	public List<T> getListWithProvidedFrom(StringBuilder sb, boolean doSort) {
 		// First build where, to get all paths in from
 		StringBuilder sbWhere = new StringBuilder();
 		HQLRestrictionValues values = buildQueryWhere(sbWhere);
-		// Build order, to get all paths in from
-		buildQueryOrder(sbWhere);
 
-		// add order columns if needed, cannot sort without it!
-		// will be removed at the end (result list will be Object[] then)
-		for (HQLOrder order : orders) {
-			sb.append(", ").append(order.getPath());
+		if (doSort) {
+			// Build order, to get all paths in from
+			buildQueryOrder(sbWhere);
+			// add order columns if needed, cannot sort without it!
+			// will be removed at the end (result list will be Object[] then)
+			for (HQLOrder order : orders) {
+				sb.append(", ").append(order.getPath());
+			}
 		}
+
 		sb.append(buildQueryFrom());
 		sb.append(sbWhere);
 
@@ -350,7 +404,7 @@ public class HQLQueryBuilder<T> implements HQLQueryBuilderInterface<T> {
 		List resultList = query.getResultList();
 
 		List finalResult = resultList;
-		if (orders.size() > 0) {
+		if (orders.size() > 0 && doSort) {
 			finalResult = new ArrayList(resultList.size());
 			for (Object object : resultList) {
 				Object[] row = (Object[]) object;
@@ -455,15 +509,12 @@ public class HQLQueryBuilder<T> implements HQLQueryBuilderInterface<T> {
 	}
 
 	/**
-	 * Gets some statistics of a path relative to the entity class. Restrictions
-	 * are applied.<br />
-	 * A first query retrieve the id of the statistic entity and count
-	 * occurences. A second retrieves instances from ids
+	 * Gets some statistics of a path relative to the entity class. Restrictions are applied.<br />
+	 * A first query retrieve the id of the statistic entity and count occurences. A second retrieves instances from ids
 	 * 
 	 * @param path
 	 *            the path (like testInstance.lastStatus)
-	 * @return a list of object array. First element is the instance matching
-	 *         the path (can be null). Second one is the number of entities.
+	 * @return a list of object array. First element is the instance matching the path (can be null). Second one is the number of entities.
 	 */
 	@SuppressWarnings("unchecked")
 	public List<Object[]> getStatistics(String path) {
@@ -472,8 +523,7 @@ public class HQLQueryBuilder<T> implements HQLQueryBuilderInterface<T> {
 
 		String pathGroupedBy = null;
 
-		EntityType<?> classMetadata = hqlQueryBuilderCache
-				.getClassMetadata(path.toString());
+		EntityType<?> classMetadata = hqlQueryBuilderCache.getClassMetadata(path.toString());
 
 		Class<?> mappedClass;
 		if (classMetadata == null) {
@@ -485,8 +535,7 @@ public class HQLQueryBuilder<T> implements HQLQueryBuilderInterface<T> {
 		}
 
 		pathGroupedBy = getShortProperty(pathGroupedBy);
-		StringBuilder sb = new StringBuilder("select " + pathGroupedBy
-				+ ", count(distinct this_)");
+		StringBuilder sb = new StringBuilder("select " + pathGroupedBy + ", count(distinct this_)");
 
 		StringBuilder sbWhere = new StringBuilder();
 		HQLRestrictionValues restrictionValues = buildQueryWhere(sbWhere);
@@ -537,8 +586,7 @@ public class HQLQueryBuilder<T> implements HQLQueryBuilderInterface<T> {
 
 				for (Object[] objects : resultList) {
 					if (objects[0] != null && objects[0] instanceof Number) {
-						Object newValue = values.get(((Number) objects[0])
-								.intValue());
+						Object newValue = values.get(((Number) objects[0]).intValue());
 						objects[0] = newValue;
 					}
 				}
@@ -562,8 +610,7 @@ public class HQLQueryBuilder<T> implements HQLQueryBuilderInterface<T> {
 	 * {@inheritDoc}
 	 */
 	@Override
-	public List<HQLStatistic<T>> getListWithStatistics(
-			List<HQLStatisticItem> items) {
+	public List<HQLStatistic<T>> getListWithStatistics(List<HQLStatisticItem> items) {
 
 		Map<Integer, HQLStatistic<T>> resultBuilder = new HashMap<Integer, HQLStatistic<T>>();
 
@@ -584,8 +631,7 @@ public class HQLQueryBuilder<T> implements HQLQueryBuilderInterface<T> {
 			}
 			if (ido != null && ido instanceof Number) {
 				Integer id = ((Number) ido).intValue();
-				HQLStatistic<T> statistic = new HQLStatistic<T>(id, t,
-						items.size());
+				HQLStatistic<T> statistic = new HQLStatistic<T>(id, t, items.size());
 				resultBuilder.put(id, statistic);
 			}
 		}
@@ -600,8 +646,7 @@ public class HQLQueryBuilder<T> implements HQLQueryBuilderInterface<T> {
 	}
 
 	@SuppressWarnings("unchecked")
-	private void getListWithStatisticsWithRestriction(
-			List<HQLStatisticItem> items,
+	private void getListWithStatisticsWithRestriction(List<HQLStatisticItem> items,
 			Map<Integer, HQLStatistic<T>> resultBuilder) {
 		for (int i = 0; i < items.size(); i++) {
 			HQLRestriction restriction = items.get(i).getRestriction();
@@ -609,15 +654,12 @@ public class HQLQueryBuilder<T> implements HQLQueryBuilderInterface<T> {
 				String path = items.get(i).getPath();
 				// testQuery("select t.id, s.id, count(distinct ti) from Test as t left join t.instances as ti left join ti.lastStatus as s group by t.id, s.id");
 				StringBuilder sb = new StringBuilder("select this_.id");
-				sb.append(", count(distinct ").append(getShortProperty(path))
-						.append(")");
+				sb.append(", count(distinct ").append(getShortProperty(path)).append(")");
 
 				StringBuilder sbWhere = new StringBuilder();
-				List<HQLRestriction> restrictions_ = new ArrayList<HQLRestriction>(
-						restrictions);
+				List<HQLRestriction> restrictions_ = new ArrayList<HQLRestriction>(restrictions);
 				restrictions_.add(restriction);
-				HQLRestrictionValues restrictionValues = buildQueryWhere(
-						sbWhere, restrictions_);
+				HQLRestrictionValues restrictionValues = buildQueryWhere(sbWhere, restrictions_);
 				buildQueryGroupBy(sbWhere, "this_.id");
 
 				sb.append(buildQueryFrom());
@@ -638,8 +680,7 @@ public class HQLQueryBuilder<T> implements HQLQueryBuilderInterface<T> {
 	}
 
 	@SuppressWarnings("unchecked")
-	private void getListWithStatisticsWithoutRestriction(
-			List<HQLStatisticItem> items,
+	private void getListWithStatisticsWithoutRestriction(List<HQLStatisticItem> items,
 			Map<Integer, HQLStatistic<T>> resultBuilder) {
 		List<Integer> itemIndexes = new ArrayList<Integer>();
 		List<String> paths = new ArrayList<String>();
@@ -655,8 +696,7 @@ public class HQLQueryBuilder<T> implements HQLQueryBuilderInterface<T> {
 			// testQuery("select t.id, count(distinct ti), count(distinct u) from Test as t left join t.instances as ti left join ti.monitorInSession as mis left join mis.user as u group by t.id");
 			StringBuilder sb = new StringBuilder("select this_.id");
 			for (String path : paths) {
-				sb.append(", count(distinct ").append(getShortProperty(path))
-						.append(")");
+				sb.append(", count(distinct ").append(getShortProperty(path)).append(")");
 			}
 			StringBuilder sbWhere = new StringBuilder();
 			HQLRestrictionValues restrictionValues = buildQueryWhere(sbWhere);
@@ -676,8 +716,7 @@ public class HQLQueryBuilder<T> implements HQLQueryBuilderInterface<T> {
 
 				for (int i = 1; i < objects.length; i++) {
 					Integer itemIndex = itemIndexes.get(i - 1);
-					statistic.getCounts()[itemIndex] = ((Number) objects[i])
-							.intValue();
+					statistic.getCounts()[itemIndex] = ((Number) objects[i]).intValue();
 				}
 			}
 		}
@@ -688,23 +727,19 @@ public class HQLQueryBuilder<T> implements HQLQueryBuilderInterface<T> {
 	 */
 	@Override
 	@SuppressWarnings("unchecked")
-	public List<Object> getListWithStatisticsItems(
-			List<HQLStatisticItem> items, HQLStatistic<T> item,
+	public List<Object> getListWithStatisticsItems(List<HQLStatisticItem> items, HQLStatistic<T> item,
 			int statisticItemIndex) {
 
 		List<Object> resultList = null;
 
 		String path = items.get(statisticItemIndex).getPath();
-		StringBuilder sb = new StringBuilder("select distinct ")
-				.append(getShortProperty(path));
+		StringBuilder sb = new StringBuilder("select distinct ").append(getShortProperty(path));
 
-		HQLRestriction restriction = items.get(statisticItemIndex)
-				.getRestriction();
+		HQLRestriction restriction = items.get(statisticItemIndex).getRestriction();
 
 		StringBuilder sbWhere = new StringBuilder();
 		HQLRestrictionValues restrictionValues = null;
-		List<HQLRestriction> restrictions_ = new ArrayList<HQLRestriction>(
-				restrictions);
+		List<HQLRestriction> restrictions_ = new ArrayList<HQLRestriction>(restrictions);
 
 		// with restriction
 		if (restriction != null) {

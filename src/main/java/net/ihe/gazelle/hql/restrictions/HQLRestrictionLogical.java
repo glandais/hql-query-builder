@@ -24,7 +24,9 @@ abstract class HQLRestrictionLogical implements HQLRestriction {
 				sb.append(" ");
 			}
 			first = false;
+			sb.append("(");
 			restriction.toHQL(queryBuilder, values, sb);
+			sb.append(")");
 		}
 		sb.append(")");
 	}

@@ -33,14 +33,12 @@ public class HQLRestrictionIn implements HQLRestriction {
 	}
 
 	@Override
-	public void toHQL(HQLQueryBuilder<?> queryBuilder,
-			HQLRestrictionValues values, StringBuilder sb) {
+	public void toHQL(HQLQueryBuilder<?> queryBuilder, HQLRestrictionValues values, StringBuilder sb) {
 		if (elements.isEmpty()) {
 			sb.append(queryBuilder.getShortProperty(path)).append(" is null");
 		} else {
 			sb.append(queryBuilder.getShortProperty(path));
-			sb.append(" in (:").append(values.addValue(path, elements))
-					.append(")");
+			sb.append(" in (:").append(values.addValue(path, elements)).append(")");
 		}
 	}
 

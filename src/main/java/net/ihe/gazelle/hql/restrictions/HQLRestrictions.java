@@ -74,4 +74,8 @@ public class HQLRestrictions {
 		return new HQLRestrictionAnd(restrictions);
 	}
 
+	public static HQLRestriction not(HQLRestriction toNegate) {
+		return new HQLRestrictionNot(toNegate);
+	}
+
 }

@@ -10,8 +10,6 @@ import javax.persistence.metamodel.Attribute;
 import javax.persistence.metamodel.EntityType;
 import javax.persistence.metamodel.PluralAttribute;
 
-import net.ihe.gazelle.hql.providers.EntityManagerService;
-
 import org.apache.commons.lang.StringUtils;
 
 class HQLQueryBuilderCache {
@@ -27,19 +25,11 @@ class HQLQueryBuilderCache {
 			Class<?> entityClass) {
 		super();
 
-		EntityManager entityManagerForFactory;
-		if (entityManager != null) {
-			entityManagerForFactory = entityManager;
-		} else {
-			entityManagerForFactory = EntityManagerService
-					.provideEntityManager();
-		}
-
 		if (metamodel == null) {
 			metamodel = Collections
 					.synchronizedMap(new HashMap<String, EntityType<?>>());
-			Set<EntityType<?>> entities = entityManagerForFactory
-					.getMetamodel().getEntities();
+			Set<EntityType<?>> entities = entityManager.getMetamodel()
+					.getEntities();
 			for (EntityType<?> entityType : entities) {
 				metamodel.put(entityType.getJavaType().getCanonicalName(),
 						entityType);

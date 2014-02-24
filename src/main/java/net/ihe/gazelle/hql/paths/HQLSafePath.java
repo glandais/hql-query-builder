@@ -1,12 +1,13 @@
 package net.ihe.gazelle.hql.paths;
 
+import java.io.Serializable;
 import java.util.List;
 
 import net.ihe.gazelle.hql.HQLQueryBuilder;
 import net.ihe.gazelle.hql.HQLRestriction;
 import net.ihe.gazelle.hql.beans.HQLStatisticItem;
 
-public abstract class HQLSafePath<T> implements Comparable<HQLSafePath<T>> {
+public abstract class HQLSafePath<T> implements Comparable<HQLSafePath<T>>, Serializable {
 
 	protected String path;
 
@@ -44,11 +45,6 @@ public abstract class HQLSafePath<T> implements Comparable<HQLSafePath<T>> {
 
 	public HQLStatisticItem statisticItem() {
 		return new HQLStatisticItem(path);
-	}
-
-	@SuppressWarnings("unchecked")
-	public List<T> getListDistinct() {
-		return (List<T>) queryBuilder.getListDistinct(path);
 	}
 
 	public List<Object[]> getStatistics() {

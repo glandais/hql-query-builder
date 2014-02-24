@@ -18,17 +18,22 @@ package net.ihe.gazelle.hql.generator.annotation;
 
 import java.beans.Introspector;
 import java.io.PrintWriter;
+import java.util.Date;
+import java.util.List;
+import java.util.Set;
 
+import javax.lang.model.element.AnnotationMirror;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.ElementKind;
+import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.type.DeclaredType;
 import javax.lang.model.type.TypeMirror;
 import javax.lang.model.util.Elements;
 
-import net.ihe.gazelle.hql.NotExportable;
 import net.ihe.gazelle.hql.generator.ClassWriter;
 import net.ihe.gazelle.hql.generator.model.MetaAttribute;
 import net.ihe.gazelle.hql.generator.model.MetaEntity;
+import net.ihe.gazelle.hql.generator.model.MetaSingleAttribute;
 
 /**
  * Captures all information about an annotated persistent attribute.
@@ -43,7 +48,6 @@ public abstract class AnnotationMetaAttribute implements MetaAttribute {
 	private final AnnotationMetaEntity parent;
 	private final String type;
 	private AttributeType attributeType;
-	private boolean notExported;
 
 	public AnnotationMetaAttribute(AnnotationMetaEntity parent, Element element, String type,
 			AttributeType attributeType) {
@@ -51,16 +55,6 @@ public abstract class AnnotationMetaAttribute implements MetaAttribute {
 		this.parent = parent;
 		this.type = type;
 		this.attributeType = attributeType;
-
-		notExported = false;
-		NotExportable notExportable = element.getAnnotation(NotExportable.class);
-		if (notExportable != null) {
-			notExported = true;
-		}
-	}
-
-	public boolean isNotExported() {
-		return notExported;
 	}
 
 	@Override
@@ -75,8 +69,21 @@ public abstract class AnnotationMetaAttribute implements MetaAttribute {
 		TypeMirror type = element.asType();
 		if (type instanceof DeclaredType) {
 			DeclaredType declaredType = (DeclaredType) type;
-			Element declaredElement = declaredType.asElement();
-			elementKind = declaredElement.getKind();
+			Element declaredElement = null;
+
+			if (attributeType == AttributeType.COLLECTION) {
+				TypeMirror listType = declaredType.getTypeArguments().get(0);
+				if (type instanceof DeclaredType) {
+					DeclaredType listDeclaredType = (DeclaredType) listType;
+					declaredElement = listDeclaredType.asElement();
+				}
+			} else {
+				declaredElement = declaredType.asElement();
+			}
+
+			if (declaredElement != null) {
+				elementKind = declaredElement.getKind();
+			}
 		}
 
 		if (ElementKind.ENUM.equals(elementKind) || attributeType == AttributeType.PRIMITIVE
@@ -92,7 +99,16 @@ public abstract class AnnotationMetaAttribute implements MetaAttribute {
 		// pw.println("	 * " + sb.toString());
 		pw.println("	 * @return Path to " + propertyName + " of type " + typeDeclaration);
 		pw.println("	 */");
+
 		if (doReference) {
+			String declaredType = parent.importType(typeDeclaration);
+			String importType;
+			importType = parent.importType(typeDeclaration + ClassWriter.ClassType.UNIQUE.suffix);
+			pw.println("	public " + importType + "<" + declaredType + "> " + propertyName + "() {");
+			pw.println("		return new " + importType + "<" + declaredType + ">(path + \"."
+					+ propertyName + "\", queryBuilder);");
+			pw.println("	}");
+			/*
 			String declaredType = parent.importType(typeDeclaration);
 			String importType;
 			if (attributeType == AttributeType.COLLECTION) {
@@ -104,11 +120,32 @@ public abstract class AnnotationMetaAttribute implements MetaAttribute {
 			pw.println("		return new " + importType + "<" + declaredType + ">(path + \"." + propertyName
 					+ "\", queryBuilder);");
 			pw.println("	}");
+			*/
 		} else {
+			String hqlSafePathBasicType = "HQLSafePathBasic";
+
+			try {
+				Class<?> clazz;
+				try {
+					clazz = Class.forName(typeDeclaration);
+				} catch (ClassNotFoundException e) {
+					clazz = Class.forName("java.lang." + typeDeclaration);
+				}
+				if (Date.class.isAssignableFrom(clazz)) {
+					hqlSafePathBasicType = "HQLSafePathBasicDate";
+				} else if (String.class.isAssignableFrom(clazz)) {
+					hqlSafePathBasicType = "HQLSafePathBasicString";
+				} else if (Number.class.isAssignableFrom(clazz)) {
+					hqlSafePathBasicType = "HQLSafePathBasicNumber";
+				}
+			} catch (ClassNotFoundException e) {
+				System.out.println("Failed to get type for " + typeDeclaration);
+			}
+
 			String declaredType = parent.importType(typeDeclaration);
-			pw.println("	public HQLSafePathBasic<" + declaredType + "> " + propertyName + "() {");
-			pw.println("		return new HQLSafePathBasic<" + declaredType + ">(path + \"." + propertyName
-					+ "\", queryBuilder, " + declaredType + ".class);");
+			pw.println("	public " + hqlSafePathBasicType + "<" + declaredType + "> " + propertyName + "() {");
+			pw.println("		return new " + hqlSafePathBasicType + "<" + declaredType + ">(this, path + \"."
+					+ propertyName + "\", queryBuilder, " + declaredType + ".class);");
 			pw.println("	}");
 		}
 	}

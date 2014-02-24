@@ -17,6 +17,7 @@
 package net.ihe.gazelle.hql.generator.model;
 
 import java.util.List;
+
 import javax.lang.model.element.TypeElement;
 
 /**
@@ -42,10 +43,6 @@ public interface MetaEntity extends ImportContext {
 	TypeElement getTypeElement();
 
 	boolean isMetaComplete();
-
-	List<String> getUniqueColumnNames();
-
-	List<String> getIdColumnNames();
 
 	String getDbSynchronizedSet();
 

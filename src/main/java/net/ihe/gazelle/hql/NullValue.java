@@ -1,6 +1,10 @@
 package net.ihe.gazelle.hql;
 
-public class NullValue {
+import java.io.Serializable;
+
+public class NullValue implements Serializable {
+
+	private static final long serialVersionUID = 5057779027617620473L;
 
 	public static final NullValue NULL_VALUE = new NullValue();
 	public static final String NULL_VALUE_STRING = "NullValue";

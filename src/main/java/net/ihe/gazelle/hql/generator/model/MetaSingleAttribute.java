@@ -22,7 +22,14 @@ package net.ihe.gazelle.hql.generator.model;
 public interface MetaSingleAttribute extends MetaAttribute {
 	String getColumnName();
 
+	void setUnique(boolean unique);
+
 	boolean isUnique();
 
+	void setUniqueSet(int unique);
+
+	int getUniqueSet();
+
 	boolean isId();
+
 }
