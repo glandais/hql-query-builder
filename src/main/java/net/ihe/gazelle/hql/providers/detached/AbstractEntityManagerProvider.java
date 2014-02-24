@@ -2,25 +2,28 @@ package net.ihe.gazelle.hql.providers.detached;
 
 import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
+import javax.persistence.Persistence;
 
 import net.ihe.gazelle.hql.providers.EntityManagerProvider;
 
-import org.hibernate.ejb.Ejb3Configuration;
-
-public abstract class AbstractEntityManagerProvider implements EntityManagerProvider {
+public abstract class AbstractEntityManagerProvider implements
+		EntityManagerProvider {
 
 	private EntityManagerFactory entityManagerFactory;
 
 	// META-INF/hibernate.cfg.xml
-	public abstract String getHibernateConfigPath();
+	//	public abstract String getHibernateConfigPath();
+	public abstract String getPersistenceUnitName();
 
 	protected EntityManagerFactory getEntityManagerFactory() {
 		if (entityManagerFactory == null) {
 			synchronized (AbstractEntityManagerProvider.class) {
 				if (entityManagerFactory == null) {
-					Ejb3Configuration cfg = new Ejb3Configuration();
-					cfg.configure(getHibernateConfigPath());
-					entityManagerFactory = cfg.buildEntityManagerFactory();
+					entityManagerFactory = Persistence
+							.createEntityManagerFactory(getPersistenceUnitName());
+					//					Ejb3Configuration cfg = new Ejb3Configuration();
+					//					cfg.configure(getHibernateConfigPath());
+					//					entityManagerFactory = cfg.buildEntityManagerFactory();
 				}
 			}
 		}
@@ -29,7 +32,8 @@ public abstract class AbstractEntityManagerProvider implements EntityManagerProv
 
 	@Override
 	public EntityManager provideEntityManager() {
-		EntityManager em = HibernateActionPerformer.ENTITYMANGER_THREADLOCAL.get();
+		EntityManager em = HibernateActionPerformer.ENTITYMANGER_THREADLOCAL
+				.get();
 		if (em != null) {
 			return em;
 		} else {

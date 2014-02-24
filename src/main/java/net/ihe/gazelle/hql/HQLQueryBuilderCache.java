@@ -3,61 +3,63 @@ package net.ihe.gazelle.hql;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
 
 import javax.persistence.EntityManager;
+import javax.persistence.metamodel.Attribute;
+import javax.persistence.metamodel.EntityType;
+import javax.persistence.metamodel.PluralAttribute;
 
 import net.ihe.gazelle.hql.providers.EntityManagerService;
 
 import org.apache.commons.lang.StringUtils;
-import org.hibernate.Session;
-import org.hibernate.SessionFactory;
-import org.hibernate.engine.SessionFactoryImplementor;
-import org.hibernate.metadata.ClassMetadata;
-import org.hibernate.type.BagType;
-import org.hibernate.type.CollectionType;
-import org.hibernate.type.Type;
 
 class HQLQueryBuilderCache {
 
-	private Map<String, ClassMetadata> pathToClassMetadata;
+	private static Map<String, EntityType<?>> metamodel;
+
+	private Map<String, EntityType<?>> pathToClassMetadata;
 	private Map<String, Class<?>> pathToClass;
 	private Map<String, String> aliases;
 	private Map<String, Boolean> isBagTypes;
-	private SessionFactoryImplementor factory;
 
-	public HQLQueryBuilderCache(EntityManager entityManager, Class<?> entityClass) {
+	public HQLQueryBuilderCache(EntityManager entityManager,
+			Class<?> entityClass) {
 		super();
-
-		this.factory = null;
 
 		EntityManager entityManagerForFactory;
 		if (entityManager != null) {
 			entityManagerForFactory = entityManager;
 		} else {
-			entityManagerForFactory = EntityManagerService.provideEntityManager();
+			entityManagerForFactory = EntityManagerService
+					.provideEntityManager();
 		}
-		Object delegate = entityManagerForFactory.getDelegate();
-		if (delegate instanceof Session) {
-			Session session = (Session) delegate;
-			SessionFactory sessionFactory = session.getSessionFactory();
-			if (sessionFactory instanceof SessionFactoryImplementor) {
-				factory = (SessionFactoryImplementor) sessionFactory;
+
+		if (metamodel == null) {
+			metamodel = Collections
+					.synchronizedMap(new HashMap<String, EntityType<?>>());
+			Set<EntityType<?>> entities = entityManagerForFactory
+					.getMetamodel().getEntities();
+			for (EntityType<?> entityType : entities) {
+				metamodel.put(entityType.getJavaType().getCanonicalName(),
+						entityType);
 			}
 		}
-		if (factory == null) {
-			throw new IllegalArgumentException();
-		}
 
-		pathToClassMetadata = Collections.synchronizedMap(new HashMap<String, ClassMetadata>());
-		pathToClassMetadata.put("this_", factory.getClassMetadata(entityClass));
-		pathToClass = Collections.synchronizedMap(new HashMap<String, Class<?>>());
+		pathToClassMetadata = Collections
+				.synchronizedMap(new HashMap<String, EntityType<?>>());
+		pathToClassMetadata.put("this_",
+				metamodel.get(entityClass.getCanonicalName()));
+		pathToClass = Collections
+				.synchronizedMap(new HashMap<String, Class<?>>());
 		pathToClass.put("this_", entityClass);
 		aliases = Collections.synchronizedMap(new HashMap<String, String>());
-		isBagTypes = Collections.synchronizedMap(new HashMap<String, Boolean>());
+		isBagTypes = Collections
+				.synchronizedMap(new HashMap<String, Boolean>());
 	}
 
-	public ClassMetadata getClassMetadata(String path) {
-		ClassMetadata result = pathToClassMetadata.get(path);
+	public EntityType<?> getClassMetadata(String path) {
+		EntityType<?> result = pathToClassMetadata.get(path);
 		if (result == null) {
 			buildCompleteClassMetadata(path);
 			result = pathToClassMetadata.get(path);
@@ -69,8 +71,8 @@ class HQLQueryBuilderCache {
 		String[] parts = StringUtils.split(path, ".");
 		String currentPath = "";
 
-		ClassMetadata parentClassMetadata = null;
-		ClassMetadata classMetadata = null;
+		EntityType<?> parentClassMetadata = null;
+		EntityType<?> classMetadata = null;
 
 		for (int i = 0; i < parts.length; i++) {
 			if (i != 0) {
@@ -84,7 +86,8 @@ class HQLQueryBuilderCache {
 				synchronized (pathToClassMetadata) {
 					classMetadata = pathToClassMetadata.get(currentPath);
 					if (classMetadata == null) {
-						classMetadata = buildClassMetadata(currentPath, parentClassMetadata, lastPart);
+						classMetadata = buildClassMetadata(currentPath,
+								parentClassMetadata, lastPart);
 						pathToClassMetadata.put(currentPath, classMetadata);
 					}
 				}
@@ -93,18 +96,19 @@ class HQLQueryBuilderCache {
 		}
 	}
 
-	private ClassMetadata buildClassMetadata(String currentPath, ClassMetadata parentClassMetadata, String lastPart) {
-		ClassMetadata classMetadata;
-		Type propertyType = parentClassMetadata.getPropertyType(lastPart);
+	private EntityType<?> buildClassMetadata(String currentPath,
+			EntityType<?> parentClassMetadata, String lastPart) {
+		EntityType<?> classMetadata;
+		Attribute<?, ?> propertyType = parentClassMetadata
+				.getDeclaredAttribute(lastPart);
 
-		Class<?> returnedClass = propertyType.getReturnedClass();
-		if (propertyType instanceof CollectionType) {
-			String role = ((CollectionType) propertyType).getRole();
-			propertyType = factory.getCollectionPersister(role).getElementType();
-			returnedClass = propertyType.getReturnedClass();
+		Class<?> returnedClass = propertyType.getJavaType();
+		if (propertyType instanceof PluralAttribute) {
+			returnedClass = ((PluralAttribute) propertyType).getElementType()
+					.getJavaType();
 		}
 		pathToClass.put(currentPath, returnedClass);
-		classMetadata = factory.getClassMetadata(returnedClass);
+		classMetadata = metamodel.get(returnedClass.getCanonicalName());
 		pathToClassMetadata.put(currentPath, classMetadata);
 		return classMetadata;
 	}
@@ -145,14 +149,15 @@ class HQLQueryBuilderCache {
 					String parentPath = path.substring(0, lastIndexOf);
 					String propertyName = path.substring(lastIndexOf + 1);
 
-					ClassMetadata classMetadata = getClassMetadata(parentPath);
-					Type propertyType = classMetadata.getPropertyType(propertyName);
+					EntityType<?> classMetadata = getClassMetadata(parentPath);
+					Attribute<?, ?> propertyType = classMetadata
+							.getDeclaredAttribute(propertyName);
 
-					if (propertyType.getClass().isAssignableFrom(BagType.class)) {
-						result = true;
-					} else {
-						result = false;
-					}
+					//					if (propertyType.getClass().isAssignableFrom(BagType.class)) {
+					//						result = true;
+					//					} else {
+					result = false;
+					//					}
 
 					isBagTypes.put(path, result);
 				}
