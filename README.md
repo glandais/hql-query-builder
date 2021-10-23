@@ -1,4 +1,4 @@
-gazelle-hql
-===========
+hql-query-builder
+=================
 
 HQL library

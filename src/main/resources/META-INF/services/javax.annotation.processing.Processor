@@ -1,1 +1,1 @@
-net.ihe.gazelle.hql.generator.JPAMetaModelEntityProcessor
+io.github.glandais.hql.generator.JPAMetaModelEntityProcessor
