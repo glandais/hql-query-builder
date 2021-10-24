@@ -130,6 +130,8 @@ class HQLQueryBuilderCache {
     }
 
     public Boolean isBagType(String path) {
+        return false;
+        /*
         Boolean result = isBagTypes.get(path);
         if (result == null) {
             synchronized (isBagTypes) {
@@ -155,6 +157,8 @@ class HQLQueryBuilderCache {
 
         }
         return result;
+
+         */
     }
 
 }
