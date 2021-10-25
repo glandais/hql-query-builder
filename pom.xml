@@ -3,7 +3,7 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
 
     <modelVersion>4.0.0</modelVersion>
-    <groupId>com.github.glandais</groupId>
+    <groupId>com.github.glandais.hql-query-builder</groupId>
     <artifactId>hql-query-builder-parent</artifactId>
     <version>1.0.5-SNAPSHOT</version>
     <modules>
