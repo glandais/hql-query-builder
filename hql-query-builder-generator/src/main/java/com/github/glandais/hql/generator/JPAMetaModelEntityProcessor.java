@@ -16,6 +16,7 @@
  */
 package com.github.glandais.hql.generator;
 
+import com.github.glandais.hql.HQLQueries;
 import com.github.glandais.hql.generator.annotation.AnnotationEmbeddable;
 import com.github.glandais.hql.generator.annotation.AnnotationMetaEntity;
 import com.github.glandais.hql.generator.model.MetaEntity;
@@ -25,10 +26,7 @@ import com.github.glandais.hql.generator.util.TypeUtils;
 
 import javax.annotation.processing.*;
 import javax.lang.model.SourceVersion;
-import javax.lang.model.element.AnnotationMirror;
-import javax.lang.model.element.Element;
-import javax.lang.model.element.ElementKind;
-import javax.lang.model.element.TypeElement;
+import javax.lang.model.element.*;
 import javax.lang.model.type.DeclaredType;
 import javax.lang.model.type.ExecutableType;
 import javax.lang.model.type.TypeKind;
@@ -59,19 +57,18 @@ public class JPAMetaModelEntityProcessor extends AbstractProcessor {
     private static final Boolean ALLOW_OTHER_PROCESSORS_TO_CLAIM_ANNOTATIONS = Boolean.FALSE;
 
     private Context context;
+    private ProcessingEnvironment env;
 
     @Override
     public void init(ProcessingEnvironment env) {
         super.init(env);
+        this.env = env;
         context = new Context(env);
         context.logMessage(Diagnostic.Kind.NOTE,
                 "Hibernate JPA 2 Static-Metamodel Generator " + Version.getVersionString());
-        String tmp;
 
-        tmp = env.getOptions().get(JPAMetaModelEntityProcessor.ADD_GENERATION_DATE);
-        boolean addGenerationDate = Boolean.parseBoolean(tmp);
+        boolean addGenerationDate = Boolean.parseBoolean(env.getOptions().get(JPAMetaModelEntityProcessor.ADD_GENERATION_DATE));
         context.setAddGenerationDate(addGenerationDate);
-
     }
 
     @Override
@@ -103,21 +100,23 @@ public class JPAMetaModelEntityProcessor extends AbstractProcessor {
             }
         }
 
-        createMetaModelClasses();
+        Collection<MetaEntity> metaModelClasses = createMetaModelClasses();
 
-        // FIXME create a digraph between classes
+        for (Element hqlQueries : roundEnvironment.getElementsAnnotatedWith(HQLQueries.class)) {
+            ClassWriter.writeQueries(hqlQueries, env, metaModelClasses, context);
+        }
 
         return ALLOW_OTHER_PROCESSORS_TO_CLAIM_ANNOTATIONS;
     }
 
-    private void createMetaModelClasses() {
+    private Collection<MetaEntity> createMetaModelClasses() {
         // keep track of all classes for which model have been generated
-        Collection<String> generatedModelClasses = new ArrayList<String>();
+        Collection<MetaEntity> generatedModelClasses = new ArrayList<>();
 
         for (MetaEntity entity : context.getMetaEntities()) {
             context.logMessage(Diagnostic.Kind.NOTE, "Writing meta model for entity " + entity);
             ClassWriter.writeFile(entity, context);
-            generatedModelClasses.add(entity.getQualifiedName());
+            generatedModelClasses.add(entity);
         }
 
         // we cannot process the delayed entities in any order. There might be
@@ -129,7 +128,7 @@ public class JPAMetaModelEntityProcessor extends AbstractProcessor {
             int toProcessCountBeforeLoop = toProcessEntities.size();
             for (MetaEntity entity : toProcessEntities) {
                 // see METAGEN-36
-                if (generatedModelClasses.contains(entity.getQualifiedName())) {
+                if (generatedModelClasses.contains(entity)) {
                     processedEntities.add(entity);
                     continue;
                 }
@@ -146,6 +145,7 @@ public class JPAMetaModelEntityProcessor extends AbstractProcessor {
                 context.logMessage(Diagnostic.Kind.ERROR, "Potential endless loop in generation of entities.");
             }
         }
+        return generatedModelClasses;
     }
 
     private boolean modelGenerationNeedsToBeDeferred(Collection<MetaEntity> entities, MetaEntity containedEntity) {

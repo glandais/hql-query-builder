@@ -22,7 +22,9 @@ import com.github.glandais.hql.generator.util.Constants;
 import com.github.glandais.hql.generator.util.TypeUtils;
 
 import javax.annotation.processing.FilerException;
+import javax.annotation.processing.ProcessingEnvironment;
 import javax.lang.model.element.Element;
+import javax.lang.model.element.PackageElement;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.type.DeclaredType;
 import javax.lang.model.type.TypeKind;
@@ -30,11 +32,8 @@ import javax.lang.model.type.TypeMirror;
 import javax.tools.Diagnostic;
 import javax.tools.FileObject;
 import java.io.*;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.Map.Entry;
-import java.util.Set;
 
 /**
  * Helper class to write the actual meta model class using the {@link javax.annotation.processing.Filer} API.
@@ -47,6 +46,56 @@ public final class ClassWriter {
     public static final String SUFFIX = "_";
 
     private ClassWriter() {
+    }
+
+    public static void writeQueries(Element hqlQuery, ProcessingEnvironment env, Collection<MetaEntity> generatedModelClasses, Context context) {
+
+        PackageElement packageElement = env.getElementUtils().getPackageOf(hqlQuery);
+        String metaModelPackage = packageElement.getQualifiedName().toString();
+
+        try {
+            String fullyQualifiedClassName = metaModelPackage + "." + hqlQuery.getSimpleName() + "Provider";
+            FileObject fo = context.getProcessingEnvironment().getFiler().createSourceFile(fullyQualifiedClassName);
+            OutputStream os = fo.openOutputStream();
+            PrintWriter pw = new PrintWriter(os);
+            pw.println("package " + metaModelPackage + ";");
+            pw.println();
+            pw.println("import javax.enterprise.context.ApplicationScoped;");
+            pw.println("import javax.inject.Inject;");
+            pw.println("import javax.persistence.EntityManager;");
+            Set<String> imports = new TreeSet<>();
+            for (MetaEntity generatedModelClass : generatedModelClasses) {
+                imports.add(generatedModelClass.getPackageName());
+            }
+            for (String impotPackage : imports) {
+                pw.println("import " + impotPackage + ".*;");
+            }
+            pw.println();
+            pw.println("@ApplicationScoped");
+            pw.println("public class " + hqlQuery.getSimpleName() + "Provider implements " + hqlQuery.getSimpleName() + " {");
+            pw.println();
+            pw.println("\t@Inject");
+            pw.println("\tEntityManager em;");
+            for (MetaEntity generatedModelClass : generatedModelClasses) {
+                pw.println();
+                String simpleName = generatedModelClass.getSimpleName();
+                pw.println("\tpublic " + simpleName + SUFFIX + "<" + simpleName + "> " +
+                        simpleName.toLowerCase() + "() {");
+                pw.println("\t\treturn new " + simpleName + SUFFIX + "<>(em);");
+                pw.println("\t}");
+            }
+            pw.println();
+            pw.println("}");
+            pw.close();
+        } catch (FilerException filerEx) {
+            context.logMessage(Diagnostic.Kind.ERROR, "Problem with Filer: "
+                    + filerEx.getMessage());
+        } catch (IOException ioEx) {
+            context.logMessage(
+                    Diagnostic.Kind.ERROR,
+                    "Problem opening file to write MetaModel for "
+                            + hqlQuery.getSimpleName() + ioEx.getMessage());
+        }
     }
 
     public static void writeFile(MetaEntity entity, Context context) {

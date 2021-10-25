@@ -28,6 +28,11 @@
             <groupId>jakarta.persistence</groupId>
             <artifactId>jakarta.persistence-api</artifactId>
         </dependency>
+        <dependency>
+            <groupId>com.github.glandais</groupId>
+            <artifactId>hql-query-builder</artifactId>
+            <version>${project.version}</version>
+        </dependency>
     </dependencies>
 
 </project>
