@@ -87,18 +87,18 @@ public class JPAMetaModelEntityProcessor extends AbstractProcessor {
         }
 
         if (context.isPersistenceUnitCompletelyXmlConfigured()) {
-            context.logMessage(Diagnostic.Kind.OTHER,
+            context.logMessage(Diagnostic.Kind.NOTE,
                     "Skipping the processing of annotations since persistence unit is purely xml configured.");
             return ALLOW_OTHER_PROCESSORS_TO_CLAIM_ANNOTATIONS;
         }
 
-        System.out.println(JPAMetaModelEntityProcessor.class.getCanonicalName() + " processor");
-        System.out.println("Generating HQL entities using JPA annotations");
+        context.logMessage(Diagnostic.Kind.NOTE, JPAMetaModelEntityProcessor.class.getCanonicalName() + " processor");
+        context.logMessage(Diagnostic.Kind.NOTE, "Generating HQL entities using JPA annotations");
 
         Set<? extends Element> elements = roundEnvironment.getRootElements();
         for (Element element : elements) {
             if (isJPAEntity(element)) {
-                context.logMessage(Diagnostic.Kind.OTHER, "Processing annotated class " + element.toString());
+                context.logMessage(Diagnostic.Kind.NOTE, "Processing annotated class " + element.toString());
                 handleRootElementAnnotationMirrors(element);
             }
         }
@@ -115,7 +115,7 @@ public class JPAMetaModelEntityProcessor extends AbstractProcessor {
         Collection<String> generatedModelClasses = new ArrayList<String>();
 
         for (MetaEntity entity : context.getMetaEntities()) {
-            context.logMessage(Diagnostic.Kind.OTHER, "Writing meta model for entity " + entity);
+            context.logMessage(Diagnostic.Kind.NOTE, "Writing meta model for entity " + entity);
             ClassWriter.writeFile(entity, context);
             generatedModelClasses.add(entity.getQualifiedName());
         }
@@ -136,7 +136,7 @@ public class JPAMetaModelEntityProcessor extends AbstractProcessor {
                 if (modelGenerationNeedsToBeDeferred(toProcessEntities, entity)) {
                     continue;
                 }
-                context.logMessage(Diagnostic.Kind.OTHER, "Writing meta model for embeddable/mapped superclass"
+                context.logMessage(Diagnostic.Kind.NOTE, "Writing meta model for embeddable/mapped superclass"
                         + entity);
                 ClassWriter.writeFile(entity, context);
                 processedEntities.add(entity);
@@ -196,7 +196,7 @@ public class JPAMetaModelEntityProcessor extends AbstractProcessor {
             if (alreadyExistingMetaEntity != null && alreadyExistingMetaEntity.isMetaComplete()) {
                 String msg = "Skipping processing of annotations for " + fqn
                         + " since xml configuration is metadata complete.";
-                context.logMessage(Diagnostic.Kind.OTHER, msg);
+                context.logMessage(Diagnostic.Kind.NOTE, msg);
                 continue;
             }
 

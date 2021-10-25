@@ -91,31 +91,16 @@ public abstract class AnnotationMetaAttribute implements MetaAttribute {
         }
 
         pw.println("	/**");
-        // pw.println("	 * " + sb.toString());
         pw.println("	 * @return Path to " + propertyName + " of type " + typeDeclaration);
         pw.println("	 */");
 
         if (doReference) {
             String declaredType = parent.importType(typeDeclaration);
-            String importType;
-            importType = parent.importType(typeDeclaration + ClassWriter.ClassType.UNIQUE.suffix);
+            String importType = parent.importType(typeDeclaration + ClassWriter.SUFFIX);
             pw.println("	public " + importType + "<" + declaredType + "> " + propertyName + "() {");
             pw.println("		return new " + importType + "<" + declaredType + ">(path + \"."
                     + propertyName + "\", queryBuilder);");
             pw.println("	}");
-			/*
-			String declaredType = parent.importType(typeDeclaration);
-			String importType;
-			if (attributeType == AttributeType.COLLECTION) {
-				importType = parent.importType(typeDeclaration + ClassWriter.ClassType.ATTRIBUTES.suffix);
-			} else {
-				importType = parent.importType(typeDeclaration + ClassWriter.ClassType.ENTITY.suffix);
-			}
-			pw.println("	public " + importType + "<" + declaredType + "> " + propertyName + "() {");
-			pw.println("		return new " + importType + "<" + declaredType + ">(path + \"." + propertyName
-					+ "\", queryBuilder);");
-			pw.println("	}");
-			*/
         } else {
             String hqlSafePathBasicType = "HQLSafePathBasic";
 

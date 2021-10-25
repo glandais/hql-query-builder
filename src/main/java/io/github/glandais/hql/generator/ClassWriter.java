@@ -44,28 +44,17 @@ import java.util.Set;
  */
 public final class ClassWriter {
 
+    public static final String SUFFIX = "_";
+
     private ClassWriter() {
     }
 
     public static void writeFile(MetaEntity entity, Context context) {
-        writeFile(entity, context, ClassType.UNIQUE);
-//		writeFile(entity, context, ClassType.ATTRIBUTES);
-//		writeFile(entity, context, ClassType.ENTITY);
-//		writeFile(entity, context, ClassType.QUERY);
-    }
-
-    public static void writeFile(MetaEntity entity, Context context,
-                                 ClassType classType) {
         entity.clearImports();
         try {
             String metaModelPackage = entity.getPackageName();
-            // need to generate the body first, since this will also update the
-            // required imports which need to
-            // be written out first
-            String body = generateBody(entity, context, classType).toString();
 
-            String fullyQualifiedClassName = getFullyQualifiedClassName(entity,
-                    metaModelPackage, classType);
+            String fullyQualifiedClassName = getFullyQualifiedClassName(entity, metaModelPackage);
             FileObject fo = context.getProcessingEnvironment().getFiler()
                     .createSourceFile(fullyQualifiedClassName);
             OutputStream os = fo.openOutputStream();
@@ -75,13 +64,17 @@ public final class ClassWriter {
                 pw.println("package " + metaModelPackage + ";");
                 pw.println();
             }
+            // need to generate the body first, since this will also update the
+            // required imports which need to
+            // be written out first
+            String body = generateBody(entity, context).toString();
             pw.println(entity.generateImports());
             pw.println(body);
 
             pw.flush();
             pw.close();
 
-            System.out.println("Generated " + fullyQualifiedClassName);
+            context.logMessage(Diagnostic.Kind.NOTE, "Generated " + fullyQualifiedClassName);
         } catch (FilerException filerEx) {
             context.logMessage(Diagnostic.Kind.ERROR, "Problem with Filer: "
                     + filerEx.getMessage());
@@ -96,14 +89,13 @@ public final class ClassWriter {
     /**
      * Generate everything after import statements.
      *
-     * @param entity       The meta entity for which to write the body
-     * @param context      The processing context
-     * @param queryBuilder
+     * @param entity  The meta entity for which to write the body
+     * @param context The processing context
      * @return body content
      * @throws IOException
      */
     private static StringBuffer generateBody(MetaEntity entity,
-                                             Context context, ClassType classType) throws IOException {
+                                             Context context) throws IOException {
         StringWriter sw = new StringWriter();
         PrintWriter pw = null;
         try {
@@ -111,83 +103,28 @@ public final class ClassWriter {
 
             Map<String, String> genParams = new HashMap<String, String>();
             genParams.put("TYPE", entity.getSimpleName());
-            genParams.put("CLASSNAME", entity.getSimpleName()
-                    + classType.suffix);
+            genParams.put("CLASSNAME", entity.getSimpleName() + SUFFIX);
 
-            switch (classType) {
-                case UNIQUE:
-                    String superClassNameUnique = findMappedSuperClass(entity,
-                            context);
-                    if (superClassNameUnique != null) {
-                        genParams.put("SUPER", superClassNameUnique
-                                + ClassType.UNIQUE.suffix);
-                    } else {
-                        genParams.put("SUPER", "HQLSafePathEntity");
-                    }
-
-                    entity.importType("javax.persistence.EntityManager");
-
-                    addFilteredResource("/genUniqueHeader.java", pw, genParams);
-                    addFilteredResource("/genUniqueBody.java", pw, genParams);
-
-                    addFilteredResource("/genUniqueHQLQueryBuilder.java", pw,
-                            genParams);
-
-                    List<MetaAttribute> membersUnique = entity.getMembers();
-                    for (MetaAttribute metaMember : membersUnique) {
-                        pw.println();
-                        metaMember.getDeclarationString(pw);
-                    }
-
-                    pw.println();
-                    pw.println();
-
-                    break;
-                case QUERY:
-                    genParams.put("SUPER", entity.getSimpleName()
-                            + ClassType.ENTITY.suffix);
-
-                    entity.importType("javax.persistence.EntityManager");
-
-                    addFilteredResource("/genQueryHeader.java", pw, genParams);
-                    addFilteredResource("/genQueryBody.java", pw, genParams);
-                    addFilteredResource("/genPathHQLQueryBuilder.java", pw,
-                            genParams);
-
-                    break;
-                case ENTITY:
-                    genParams.put("SUPER", entity.getSimpleName()
-                            + ClassType.ATTRIBUTES.suffix);
-
-                    addFilteredResource("/genPathHeader.java", pw, genParams);
-                    addFilteredResource("/genPathBody.java", pw, genParams);
-                    addFilteredResource("/genEntityBody.java", pw, genParams);
-
-                    break;
-                case ATTRIBUTES:
-                    String superClassName = findMappedSuperClass(entity, context);
-                    if (superClassName != null) {
-                        genParams.put("SUPER", superClassName
-                                + ClassType.ATTRIBUTES.suffix);
-                    } else {
-                        genParams.put("SUPER", "HQLSafePathEntity");
-                    }
-
-                    addFilteredResource("/genPathHeader.java", pw, genParams);
-                    addFilteredResource("/genPathBody.java", pw, genParams);
-                    addFilteredResource("/genAttributesBody.java", pw, genParams);
-
-                    List<MetaAttribute> members = entity.getMembers();
-                    for (MetaAttribute metaMember : members) {
-                        pw.println();
-                        metaMember.getDeclarationString(pw);
-                    }
-
-                    pw.println();
-                    pw.println();
-
-                    break;
+            String superClassNameUnique = findMappedSuperClass(entity, context);
+            if (superClassNameUnique != null) {
+                genParams.put("SUPER", superClassNameUnique
+                        + SUFFIX);
+            } else {
+                genParams.put("SUPER", "HQLSafePathEntity");
             }
+
+            entity.importType("javax.persistence.EntityManager");
+
+            addFilteredResource("/template.java", pw, genParams);
+
+            List<MetaAttribute> membersUnique = entity.getMembers();
+            for (MetaAttribute metaMember : membersUnique) {
+                pw.println();
+                metaMember.getDeclarationString(pw);
+            }
+
+            pw.println();
+            pw.println();
 
             pw.println();
             pw.println("}");
@@ -268,31 +205,15 @@ public final class ClassWriter {
     }
 
     private static String getFullyQualifiedClassName(MetaEntity entity,
-                                                     String metaModelPackage, ClassType classType) {
+                                                     String metaModelPackage) {
         String fullyQualifiedClassName = "";
         if (!metaModelPackage.isEmpty()) {
             fullyQualifiedClassName = fullyQualifiedClassName
                     + metaModelPackage + ".";
         }
         fullyQualifiedClassName = fullyQualifiedClassName
-                + entity.getSimpleName() + classType.suffix;
+                + entity.getSimpleName() + SUFFIX;
         return fullyQualifiedClassName;
-    }
-
-    public enum ClassType {
-        UNIQUE("_"),
-
-        QUERY("Query"),
-
-        ENTITY("Entity"),
-
-        ATTRIBUTES("Attributes");
-
-        public final String suffix;
-
-        ClassType(String suffix) {
-            this.suffix = suffix;
-        }
     }
 
 }
