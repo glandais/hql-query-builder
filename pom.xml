@@ -5,7 +5,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>com.github.glandais.hql-query-builder</groupId>
     <artifactId>hql-query-builder-parent</artifactId>
-    <version>1.0.5</version>
+    <version>1.0.6-SNAPSHOT</version>
     <modules>
         <module>hql-query-builder</module>
         <module>hql-query-builder-generator</module>
