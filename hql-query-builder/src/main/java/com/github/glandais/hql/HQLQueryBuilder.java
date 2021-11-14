@@ -12,6 +12,7 @@ import javax.persistence.metamodel.EntityType;
 import java.lang.reflect.Method;
 import java.util.*;
 import java.util.Map.Entry;
+import java.util.stream.Collectors;
 
 @Slf4j
 public class HQLQueryBuilder<T> implements HQLQueryBuilderInterface<T> {
@@ -274,8 +275,9 @@ public class HQLQueryBuilder<T> implements HQLQueryBuilderInterface<T> {
         Query query = createRealQuery(sb);
         buildQueryWhereParameters(query, values);
 
-        Number count = (Number) query.getSingleResult();
-        return count.intValue();
+        List<Object> resultList = query.getResultList();
+        return resultList.stream().map(n -> (Number) n).map(Number::intValue)
+                .reduce(0, Integer::sum);
     }
 
     /**
