@@ -29,9 +29,9 @@ import com.github.glandais.hql.generator.util.TypeUtils;
 
 import javax.lang.model.element.*;
 import javax.lang.model.util.ElementFilter;
-import javax.persistence.Entity;
-import javax.persistence.Table;
-import javax.persistence.UniqueConstraint;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Table;
+import jakarta.persistence.UniqueConstraint;
 import java.util.*;
 import java.util.Map.Entry;
 

@@ -43,8 +43,8 @@ import java.util.*;
  * @author Hardy Ferentschik
  * @author Emmanuel Bernard
  */
-@SupportedAnnotationTypes({"javax.persistence.Entity", "javax.persistence.MappedSuperclass",
-        "javax.persistence.Embeddable"})
+@SupportedAnnotationTypes({"jakarta.persistence.Entity", "jakarta.persistence.MappedSuperclass",
+        "jakarta.persistence.Embeddable"})
 @SupportedOptions({JPAMetaModelEntityProcessor.DEBUG_OPTION, JPAMetaModelEntityProcessor.PERSISTENCE_XML_OPTION,
         JPAMetaModelEntityProcessor.ORM_XML_OPTION, JPAMetaModelEntityProcessor.LAZY_XML_PARSING})
 public class JPAMetaModelEntityProcessor extends AbstractProcessor {

@@ -19,10 +19,10 @@ package com.github.glandais.hql.generator.annotation;
 import com.github.glandais.hql.generator.model.MetaSingleAttribute;
 
 import javax.lang.model.element.Element;
-import javax.persistence.Column;
-import javax.persistence.EmbeddedId;
-import javax.persistence.Id;
-import javax.persistence.JoinColumn;
+import jakarta.persistence.Column;
+import jakarta.persistence.EmbeddedId;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
 
 /**
  * @author Max Andersen

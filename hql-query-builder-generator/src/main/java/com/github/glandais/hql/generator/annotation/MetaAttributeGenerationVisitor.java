@@ -129,7 +129,7 @@ public class MetaAttributeGenerationVisitor extends SimpleTypeVisitor6<Annotatio
                 accessTypeInfo.setDefaultAccessType(entity.getEntityAccessTypeInfo().getAccessType());
             }
         }
-        if (collection.equals("javax.persistence.metamodel.MapAttribute")) {
+        if (collection.equals("jakarta.persistence.metamodel.MapAttribute")) {
             return createAnnotationMetaAttributeForMap(declaredType, element, collection, targetEntity);
         } else {
             return new AnnotationMetaCollection(entity, element, collection, getElementType(declaredType, targetEntity), AttributeType.COLLECTION);

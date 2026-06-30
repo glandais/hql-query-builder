@@ -2,10 +2,10 @@ package com.github.glandais.hql;
 
 import org.apache.commons.lang3.StringUtils;
 
-import javax.persistence.EntityManager;
-import javax.persistence.metamodel.Attribute;
-import javax.persistence.metamodel.EntityType;
-import javax.persistence.metamodel.PluralAttribute;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.metamodel.Attribute;
+import jakarta.persistence.metamodel.EntityType;
+import jakarta.persistence.metamodel.PluralAttribute;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
