@@ -28,6 +28,10 @@ public final class EntityManagerFixtures {
         when(childAttribute.getJavaType()).thenReturn((Class) ChildEntity.class);
         when(rootType.getDeclaredAttribute("child")).thenReturn((Attribute) childAttribute);
 
+        Attribute<RootEntity, String> nameAttribute = mock(Attribute.class);
+        when(nameAttribute.getJavaType()).thenReturn((Class) String.class);
+        when(rootType.getDeclaredAttribute("name")).thenReturn((Attribute) nameAttribute);
+
         PluralAttribute<RootEntity, ?, ItemEntity> itemsAttribute = mock(PluralAttribute.class);
         Type<ItemEntity> itemElementType = mock(Type.class);
         when(itemElementType.getJavaType()).thenReturn(ItemEntity.class);
