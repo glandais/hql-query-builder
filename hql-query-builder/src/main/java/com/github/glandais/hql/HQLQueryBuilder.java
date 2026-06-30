@@ -6,9 +6,9 @@ import com.github.glandais.hql.restrictions.HQLRestrictions;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 
-import javax.persistence.EntityManager;
-import javax.persistence.Query;
-import javax.persistence.metamodel.EntityType;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.Query;
+import jakarta.persistence.metamodel.EntityType;
 import java.lang.reflect.Method;
 import java.util.*;
 import java.util.Map.Entry;

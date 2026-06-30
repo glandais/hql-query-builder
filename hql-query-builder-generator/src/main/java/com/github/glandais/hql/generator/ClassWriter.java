@@ -62,7 +62,7 @@ public final class ClassWriter {
             pw.println();
             pw.println("import javax.enterprise.context.ApplicationScoped;");
             pw.println("import javax.inject.Inject;");
-            pw.println("import javax.persistence.EntityManager;");
+            pw.println("import jakarta.persistence.EntityManager;");
             Set<String> imports = new TreeSet<>();
             for (MetaEntity generatedModelClass : generatedModelClasses) {
                 imports.add(generatedModelClass.getPackageName());
@@ -162,7 +162,7 @@ public final class ClassWriter {
                 genParams.put("SUPER", "HQLSafePathEntity");
             }
 
-            entity.importType("javax.persistence.EntityManager");
+            entity.importType("jakarta.persistence.EntityManager");
 
             addFilteredResource("/template.java", pw, genParams);
 
