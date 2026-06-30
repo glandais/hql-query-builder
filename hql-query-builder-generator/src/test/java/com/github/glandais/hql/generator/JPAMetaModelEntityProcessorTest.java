@@ -74,7 +74,7 @@ class JPAMetaModelEntityProcessorTest {
 
     @Test
     void compilesEntitySourcesWithoutErrors() throws IOException, URISyntaxException {
-        CompilationResult result = compileSamples("SampleChild.java", "SampleRoot.java");
+        CompilationResult result = compileSamples("SampleBase.java", "SampleChild.java", "SampleAddress.java", "SampleRoot.java");
 
         String errors = result.diagnostics().stream()
                 .filter(d -> d.getKind() == Diagnostic.Kind.ERROR)
@@ -86,7 +86,7 @@ class JPAMetaModelEntityProcessorTest {
 
     @Test
     void generatesEntityBuilderForSampleRoot() throws IOException, URISyntaxException {
-        compileSamples("SampleChild.java", "SampleRoot.java");
+        compileSamples("SampleBase.java", "SampleChild.java", "SampleAddress.java", "SampleRoot.java");
 
         Path generated = outputDir.resolve("com/github/glandais/hql/generator/sample/SampleRoot_.java");
         assertThat(generated).exists();
@@ -98,23 +98,39 @@ class JPAMetaModelEntityProcessorTest {
         assertThat(content).contains("SampleChild_");
         assertThat(content).contains("child()");
         assertThat(content).contains("children()");
+        assertThat(content).contains("SampleAddress_");
+        assertThat(content).contains("address()");
     }
 
     @Test
-    void generatesEntityBuilderForSampleChild() throws IOException, URISyntaxException {
-        compileSamples("SampleChild.java", "SampleRoot.java");
+    void generatesEntityBuilderForSampleChildExtendingMappedSuperclass() throws IOException, URISyntaxException {
+        compileSamples("SampleBase.java", "SampleChild.java", "SampleAddress.java", "SampleRoot.java");
 
         Path generated = outputDir.resolve("com/github/glandais/hql/generator/sample/SampleChild_.java");
         assertThat(generated).exists();
 
         String content = Files.readString(generated);
         assertThat(content).contains("class SampleChild_");
+        assertThat(content).contains("extends com.github.glandais.hql.generator.sample.SampleBase_");
         assertThat(content).contains("label()");
+
+        Path mappedSuperclassGenerated = outputDir.resolve("com/github/glandais/hql/generator/sample/SampleBase_.java");
+        assertThat(mappedSuperclassGenerated).exists();
+        assertThat(Files.readString(mappedSuperclassGenerated)).contains("id()");
+    }
+
+    @Test
+    void generatesEntityBuilderForEmbeddableAddress() throws IOException, URISyntaxException {
+        compileSamples("SampleBase.java", "SampleChild.java", "SampleAddress.java", "SampleRoot.java");
+
+        Path generated = outputDir.resolve("com/github/glandais/hql/generator/sample/SampleAddress_.java");
+        assertThat(generated).exists();
+        assertThat(Files.readString(generated)).contains("city()");
     }
 
     @Test
     void generatesCompiledClassFilesAlongsideSources() throws IOException, URISyntaxException {
-        compileSamples("SampleChild.java", "SampleRoot.java");
+        compileSamples("SampleBase.java", "SampleChild.java", "SampleAddress.java", "SampleRoot.java");
 
         Path compiledClass = outputDir.resolve("com/github/glandais/hql/generator/sample/SampleRoot_.class");
         assertThat(compiledClass).exists();
@@ -127,7 +143,7 @@ class JPAMetaModelEntityProcessorTest {
         // project's classpath. Source generation still happens before that compile error,
         // so the generated Provider source is verified directly rather than via a successful
         // compile.
-        compileSamples("SampleChild.java", "SampleRoot.java", "SampleQueries.java");
+        compileSamples("SampleBase.java", "SampleChild.java", "SampleAddress.java", "SampleRoot.java", "SampleQueries.java");
 
         Path generated = outputDir.resolve("com/github/glandais/hql/generator/sample/SampleQueriesProvider.java");
         assertThat(generated).exists();

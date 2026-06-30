@@ -21,6 +21,8 @@ public class SampleRoot {
     @OneToMany
     private List<SampleChild> children;
 
+    private SampleAddress address;
+
     public Long getId() {
         return id;
     }
@@ -51,5 +53,13 @@ public class SampleRoot {
 
     public void setChildren(List<SampleChild> children) {
         this.children = children;
+    }
+
+    public SampleAddress getAddress() {
+        return address;
+    }
+
+    public void setAddress(SampleAddress address) {
+        this.address = address;
     }
 }
