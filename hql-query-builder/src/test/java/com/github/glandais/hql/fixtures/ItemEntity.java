@@ -1,0 +1,14 @@
+package com.github.glandais.hql.fixtures;
+
+public class ItemEntity {
+
+    private Long id;
+
+    public Long getId() {
+        return id;
+    }
+
+    public void setId(Long id) {
+        this.id = id;
+    }
+}
